@@ -3088,32 +3088,27 @@ async function checkPasswordReset(uid){
 }
 
 async function doLogin(){
-  const usernameRaw = document.getElementById('loginUsername').value.trim();
-  // Bersihkan jika user tidak sengaja ketik @tamma.app
-  const username = usernameRaw.replace('@tamma.app','').toLowerCase().replace(/\s/g,'');
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   const btn = document.getElementById('btnLogin');
   errEl.style.display = 'none';
-  if(!username){ errEl.textContent = 'Username tidak boleh kosong'; errEl.style.display = 'block'; return; }
+  if(!email){ errEl.textContent = 'Email tidak boleh kosong'; errEl.style.display = 'block'; return; }
   if(!password){ errEl.textContent = 'Password tidak boleh kosong'; errEl.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Memuat...';
   try {
-    const email = username + '@tamma.app';
-    console.log('[FB] Mencoba login dengan:', email);
     await fbAuth.signInWithEmailAndPassword(email, password);
-    // onAuthStateChanged akan handle selanjutnya
   } catch(err) {
-    console.error('[FB] Login error code:', err.code, err.message);
+    console.error('[FB] Login error:', err.code, err.message);
     let msg = '';
     switch(err.code){
       case 'auth/user-not-found':
-        msg = 'Username tidak ditemukan. Hubungi admin.'; break;
+        msg = 'Email tidak ditemukan. Hubungi admin.'; break;
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         msg = 'Password salah. Coba lagi atau hubungi admin.'; break;
       case 'auth/invalid-email':
-        msg = 'Format username tidak valid.'; break;
+        msg = 'Format email tidak valid.'; break;
       case 'auth/user-disabled':
         msg = 'Akun dinonaktifkan. Hubungi admin.'; break;
       case 'auth/too-many-requests':
@@ -6196,8 +6191,8 @@ function showToastSafe(msg, type, duration){
   <div class="login-sub">Tahfidh Juz Amma & Absensi</div>
   <div class="login-card">
     <div class="login-input-group">
-      <label>Username</label>
-      <input class="login-input" id="loginUsername" type="text" placeholder="Masukkan username" autocomplete="username" autocapitalize="none">
+      <label>Email</label>
+      <input class="login-input" id="loginEmail" type="email" placeholder="Contoh: admin@tamma.app" autocomplete="email" autocapitalize="none" autocorrect="off">
     </div>
     <div class="login-input-group">
       <label>Password</label>
@@ -6207,7 +6202,7 @@ function showToastSafe(msg, type, duration){
     <div class="login-error" id="loginError"></div>
     <button class="btn-login" onclick="doLogin()" id="btnLogin">Masuk</button>
     <p style="font-size:.73rem; color:#bbb; text-align:center; margin-top:14px;">
-      Hubungi admin untuk mendapatkan username & password
+      Hubungi admin untuk mendapatkan email & password
     </p>
   </div>
   <div class="login-version">Tamma v2.3.4</div>
