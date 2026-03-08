@@ -1913,60 +1913,9 @@ span > .fai, div > .fai { vertical-align: middle; }
   max-width: 80px;
 }
 
-/* ── Admin FAB ── */
-#adminFab {
-  display: none; position: fixed;
-  bottom: calc(var(--NAV) + env(safe-area-inset-bottom,0px) + 70px);
-  right: 14px; z-index: 700;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: linear-gradient(135deg, #e6b830, #f9a825);
-  color: #2a1800; border: none; font-size: 1.3rem;
-  box-shadow: 0 4px 16px rgba(230,184,48,.5);
-  cursor: pointer; align-items: center; justify-content: center;
-}
-#adminFab.show { display: flex; }
-#adminFab:active { transform: scale(.94); }
 
-/* ── Admin Panel ── */
-.admin-overlay {
-  display: none; position: fixed; inset: 0; z-index: 8000;
-  background: rgba(12,74,42,.45); backdrop-filter: blur(3px);
-  align-items: flex-end; justify-content: center;
-}
-.admin-overlay.show { display: flex; }
-.admin-sheet {
-  background: #fff; border-radius: 20px 20px 0 0;
-  width: 100%; max-height: 93vh;
-  display: flex; flex-direction: column;
-  box-shadow: 0 -4px 32px rgba(0,0,0,.2);
-  animation: slideUp .28s ease;
-}
-.admin-hdr {
-  padding: 14px 16px 10px; border-bottom: 1px solid var(--brd);
-  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-}
-.admin-hdr-title { font-weight: 800; font-size: .95rem; color: var(--g8); flex: 1; }
-.admin-close {
-  background: none; border: none; font-size: 1.4rem;
-  color: var(--mut); cursor: pointer; width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center; border-radius: 50%;
-}
-/* Admin tabs */
-.admin-tabs {
-  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
-  border-bottom: 2px solid var(--brd); flex-shrink: 0; padding: 0 12px;
-}
-.admin-tabs::-webkit-scrollbar { display: none; }
-.admin-tab {
-  padding: 10px 14px; border: none; background: none; cursor: pointer;
-  font-size: .8rem; font-weight: 700; color: var(--mut); white-space: nowrap;
-  border-bottom: 2px solid transparent; margin-bottom: -2px;
-  transition: all .15s;
-}
-.admin-tab.on { color: var(--g7); border-bottom-color: var(--g6); }
-.admin-body { flex: 1; overflow-y: auto; padding: 12px 14px 24px; -webkit-overflow-scrolling: touch; }
-.admin-panel { display: none; }
-.admin-panel.show { display: block; }
+
+
 
 /* ── Siswa Management Items ── */
 .siswa-item {
@@ -2127,10 +2076,6 @@ span > .fai, div > .fai { vertical-align: middle; }
   <div class="hdr-right">
     <span class="hdr-date" id="tglHdr">—</span>
     <button id="btnInstall" onclick="installApp()" style="display:none;">⬇ Pasang</button>
-    <button class="hdr-user" id="hdrUserBtn" onclick="showUserMenu()" style="display:none;">
-      <div class="hdr-avatar" id="hdrAvatar">?</div>
-      <span id="hdrUserName">—</span>
-    </button>
   </div>
 </div>
 <div id="syncStatus">↻ Menyinkron...</div>
@@ -2258,11 +2203,12 @@ span > .fai, div > .fai { vertical-align: middle; }
           <svg class="fai" viewBox="0 0 640 512" aria-hidden="true"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192h42.7c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0H21.3C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7h42.7C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3H405.3zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352H378.7C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7H154.7c-14.7 0-26.7-11.9-26.7-26.7z"/></svg>
           <div class="is-text">
             <div class="is-lbl" id="istripLbl">Belum ada daftar siswa</div>
-            <div class="is-sub">Upload Excel: Kolom A = Nama, Kolom C = Kelas</div>
+            <div class="is-sub" id="istripSub">Import Excel atau tambah manual</div>
           </div>
         </div>
+        <button class="is-btn" onclick="openTambahSiswaManual()" style="margin-right:6px;background:var(--g5);">+ Siswa</button>
         <label class="is-btn" for="xlsIn">
-          <svg class="fai" viewBox="0 0 512 512" aria-hidden="true"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64z"/></svg> Import
+          <svg class="fai" viewBox="0 0 512 512" aria-hidden="true"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64z"/></svg> Import Excel
         </label>
         <input type="file" id="xlsIn" accept=".xlsx,.xls" style="display:none" onchange="importMasterData(this)">
       </div>
@@ -2813,7 +2759,7 @@ async function loadConfig(){
         await fbDb.collection('config').doc('app').set({ tahunAjaranAktif }, { merge: true });
       }
     }
-    document.getElementById('umTaPill').textContent = tahunAjaranAktif;
+    
     document.getElementById('taCurrent').textContent = tahunAjaranAktif;
     document.getElementById('taInput').value = tahunAjaranAktif;
     document.getElementById('hdrSub').textContent = `Tahun Ajaran ${tahunAjaranAktif}`;
@@ -2899,56 +2845,23 @@ function showSyncing(){
   }, 1500);
 }
 
-// ─── Init app UI after auth ────────────────────────────────────
+// ─── Init app UI ───────────────────────────────────────────────
 function initAppUI(){
-  // Tampilkan nama Admin di header
-  const btn = document.getElementById('hdrUserBtn');
-  if(btn){ btn.style.display = 'flex'; }
-  const av = document.getElementById('hdrAvatar');
-  if(av){ av.textContent = (currentGuru?.nama || 'A').charAt(0).toUpperCase(); }
-  const nameEl = document.getElementById('hdrUserName');
-  if(nameEl){ nameEl.textContent = currentGuru?.nama || 'Admin'; }
-  // User menu
-  const umAv = document.getElementById('umAvatar');
-  if(umAv) umAv.textContent = (currentGuru?.nama || 'A').charAt(0).toUpperCase();
-  const umNama = document.getElementById('umNama');
-  if(umNama) umNama.textContent = currentGuru?.nama || 'Admin';
-  const umEmail = document.getElementById('umEmail');
-  if(umEmail) umEmail.textContent = '@' + (currentGuru?.username || 'admin');
-  const umRole = document.getElementById('umRole');
-  if(umRole) umRole.innerHTML = '<span class="guru-role-badge grb-admin">👑 Admin</span>';
-  // Selalu tampilkan admin controls
-  const adminFabEl = document.getElementById('adminFab');
-  if(adminFabEl) adminFabEl.classList.add('show');
-  const adminMenuBtn = document.getElementById('btnAdminMenu');
-  if(adminMenuBtn) adminMenuBtn.style.display = 'block';
   // Trigger init
   document.dispatchEvent(new Event('firebase-ready'));
 }
 
-function showUserMenu(){
-  document.getElementById('userMenuOverlay').style.display = 'block';
-}
-function closeUserMenu(){
-  document.getElementById('userMenuOverlay').style.display = 'none';
-}
+function showUserMenu(){}
+function closeUserMenu(){}
 
 /* ==============================
    ADMIN PANEL FUNCTIONS
 ============================== */
 let adminSiswaFilter = 'aktif';
 
-function openAdminPanel(tab='siswa'){
-  if(!isAdmin){ showToast('Hanya admin yang bisa mengakses panel ini', 'warning'); return; }
-  switchAdminTab(tab);
-  document.getElementById('adminOverlay').classList.add('show');
-}
+function openAdminPanel(tab='siswa'){}
+function closeAdminPanel(e){}
 
-function closeAdminPanel(e){
-  if(!e || e.target === document.getElementById('adminOverlay')){
-    document.getElementById('adminOverlay').classList.remove('show');
-  }
-}
 
 function switchAdminTab(tab){
   document.querySelectorAll('.admin-tab').forEach((b,i) => {
@@ -3499,7 +3412,7 @@ async function gantiTahunAjaran(){
     await fbDb.collection('config').doc('app').set({ tahunAjaranAktif: newTA }, { merge: true });
     tahunAjaranAktif = newTA;
     document.getElementById('taCurrent').textContent = newTA;
-    document.getElementById('umTaPill').textContent = newTA;
+    
     document.getElementById('hdrSub').textContent = `Tahun Ajaran ${newTA}`;
     // Reload listeners with new tahun ajaran
     setupRealtimeListeners();
@@ -4411,71 +4324,209 @@ function showAchievement(title, desc){
 /* ==============================
    IMPORT & DATA FUNCTIONS
 ============================== */
+// Data sementara sebelum dikonfirmasi import
+let _importPending = [];
+
 function importMasterData(input){
-  if(!isAdmin){ showToast('Hanya admin yang bisa import data siswa', 'warning'); input.value=''; return; }
   const f = input.files[0];
-  if(!f) return;
+  if(!f){ input.value=''; return; }
   const r = new FileReader();
-  r.onload = async e => {
+  r.onload = e => {
     try {
       const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(!rows || rows.length === 0){
+        showToast('File Excel kosong atau tidak bisa dibaca', 'error'); input.value=''; return;
+      }
+
+      // ── Auto-detect header row dan kolom ──
       let startRow = 0;
-      if (rows.length > 0) {
-        const firstCell = (rows[0][0] || '').toString().trim().toLowerCase();
-        if (/^(nama|no|siswa)/i.test(firstCell)) startRow = 1;
+      let colNama = -1, colKelas = -1;
+
+      // Cari baris header (cek 5 baris pertama)
+      for(let i = 0; i < Math.min(5, rows.length); i++){
+        const cells = rows[i].map(c => (c||'').toString().toLowerCase().trim());
+        const ni = cells.findIndex(c => /^(nama|name|siswa|murid|student|santri)/.test(c));
+        const ki = cells.findIndex(c => /^(kelas|class|rombel|tingkat|grade|ruang)/.test(c));
+        if(ni >= 0){
+          startRow = i + 1;
+          colNama = ni;
+          colKelas = ki >= 0 ? ki : -1;
+          break;
+        }
       }
+
+      // Tidak ada header? Asumsikan kolom A = nama, C = kelas (format lama)
+      if(colNama < 0){
+        startRow = 0;
+        colNama = 0;
+        colKelas = 2; // kolom C
+        // Lewati baris pertama jika berisi teks non-nama (kemungkinan header tak dikenal)
+        if(rows[0] && /^(no|#|nomer|nomor)/i.test((rows[0][0]||'').toString().trim())){
+          startRow = 1;
+        }
+      }
+
+      // ── Baca data siswa ──
       const siswaBaru = [];
-      for(let i = startRow; i < rows.length; i++) {
+      const errors = [];
+      for(let i = startRow; i < rows.length; i++){
         const row = rows[i];
-        if(!row || row.length < 2) continue;
-        const nama = (row[0] || '').toString().trim();
-        const kelas = (row[2] || 'Umum').toString().trim();
-        if(!nama) continue;
-        siswaBaru.push({nama, kelas});
+        if(!row || row.every(c => !c)) continue; // baris kosong
+        const nama = (row[colNama] || '').toString().trim();
+        const kelas = colKelas >= 0 ? (row[colKelas] || 'Umum').toString().trim() : 'Umum';
+        if(!nama){ continue; }
+        if(nama.length < 2){ errors.push(`Baris ${i+1}: nama terlalu pendek ("${nama}")`); continue; }
+        siswaBaru.push({nama, kelas: kelas || 'Umum'});
       }
-      if(siswaBaru.length === 0) {
-        showToast('Tidak ada data valid. Pastikan kolom A = Nama, kolom C = Kelas (opsional)', 'error');
-        return;
+
+      if(siswaBaru.length === 0){
+        let msg = 'Tidak ada data siswa yang valid.';
+        if(colNama === 0) msg += ' Format: kolom A = Nama, kolom C = Kelas (opsional)';
+        else msg += ` Kolom nama terdeteksi: ${String.fromCharCode(65 + colNama)}`;
+        showToast(msg, 'error'); input.value=''; return;
       }
+
+      // Deduplikasi dari file itu sendiri
       const seen = new Set();
-      const uniqueSiswa = siswaBaru.filter(s => { if(seen.has(s.nama)) return false; seen.add(s.nama); return true; });
-      // Check existing to avoid duplicate
-      const existingSnap = await fbDb.collection('siswa').get();
-      const existingNama = new Set(existingSnap.docs.map(d => d.data().nama));
-      const newSiswa = uniqueSiswa.filter(s => !existingNama.has(s.nama));
-      const skipped = uniqueSiswa.length - newSiswa.length;
-      if(!newSiswa.length){
-        showToast(`Semua ${uniqueSiswa.length} siswa sudah ada (dilewati)`, 'warning');
-        input.value=''; return;
-      }
-      showSyncing();
-      // Batch write to Firestore
-      const chunks = [];
-      for(let i=0; i<newSiswa.length; i+=400) chunks.push(newSiswa.slice(i,i+400));
-      for(const chunk of chunks){
-        const batch = fbDb.batch();
-        chunk.forEach(s => {
-          const ref = fbDb.collection('siswa').doc();
-          batch.set(ref, {
-            nama: s.nama, kelas: s.kelas || 'Umum', status: 'aktif',
-            tahunMasuk: tahunAjaranAktif,
-            createdBy: currentUser.uid,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        });
-        await batch.commit();
-      }
-      let msg = `Berhasil import ${newSiswa.length} siswa`;
-      if(skipped) msg += ` (${skipped} sudah ada, dilewati)`;
-      showToast(msg, 'success');
+      const unique = siswaBaru.filter(s => {
+        if(seen.has(s.nama.toLowerCase())) return false;
+        seen.add(s.nama.toLowerCase()); return true;
+      });
+
+      _importPending = unique;
       input.value = '';
-    } catch(err) {
-      showToast('Error: ' + err.message, 'error');
+      tampilkanPreviewImport(unique, errors, colNama, colKelas, startRow);
+
+    } catch(err){
+      showToast('Gagal membaca file: ' + err.message, 'error');
+      input.value = '';
     }
   };
   r.readAsArrayBuffer(f);
 }
+
+function tampilkanPreviewImport(list, errors, colNama, colKelas, startRow){
+  // Hitung duplikat dengan data yang sudah ada
+  const existingNama = new Set(masterSiswa.map(s => s.nama.toLowerCase()));
+  const baru = list.filter(s => !existingNama.has(s.nama.toLowerCase()));
+  const duplikat = list.length - baru.length;
+
+  // Info deteksi
+  const colNamaHuruf = String.fromCharCode(65 + colNama);
+  const colKelasHuruf = colKelas >= 0 ? String.fromCharCode(65 + colKelas) : '—';
+  document.getElementById('importPreviewInfo').innerHTML =
+    `<b>Terdeteksi:</b> Kolom nama = <b>${colNamaHuruf}</b>, kelas = <b>${colKelasHuruf}</b>, mulai baris <b>${startRow+1}</b><br>` +
+    `Ditemukan <b>${list.length}</b> siswa &bull; ` +
+    `<span style="color:var(--g6)">${baru.length} baru</span>` +
+    (duplikat ? ` &bull; <span style="color:var(--amber)">${duplikat} sudah ada (dilewati)</span>` : '');
+
+  // Render daftar
+  const html = baru.length === 0
+    ? '<div style="padding:16px;text-align:center;color:var(--mut);">Semua siswa sudah ada di daftar.</div>'
+    : baru.map((s, i) =>
+        `<div style="display:flex;justify-content:space-between;padding:7px 10px;${i%2===0?'':'background:var(--surf2)'}">
+          <span style="font-weight:600">${s.nama}</span>
+          <span style="color:var(--mut);font-size:.76rem">${s.kelas}</span>
+        </div>`
+      ).join('');
+  document.getElementById('importPreviewList').innerHTML = html;
+
+  // Peringatan error parsing
+  const warnEl = document.getElementById('importPreviewWarn');
+  if(errors.length){
+    warnEl.style.display = 'block';
+    warnEl.textContent = `⚠️ ${errors.length} baris dilewati: ${errors.slice(0,3).join('; ')}${errors.length>3?' ...':''}`;
+  } else {
+    warnEl.style.display = 'none';
+  }
+
+  document.getElementById('btnKonfirmasiImport').disabled = baru.length === 0;
+  document.getElementById('importPreviewOverlay').classList.add('show');
+}
+
+async function konfirmasiImport(){
+  const existingNama = new Set(masterSiswa.map(s => s.nama.toLowerCase()));
+  const newSiswa = _importPending.filter(s => !existingNama.has(s.nama.toLowerCase()));
+  if(!newSiswa.length){ closeImportPreview(); return; }
+
+  document.getElementById('btnKonfirmasiImport').disabled = true;
+  document.getElementById('btnKonfirmasiImport').textContent = '⏳ Menyimpan...';
+  showSyncing();
+
+  try {
+    const chunks = [];
+    for(let i = 0; i < newSiswa.length; i += 400) chunks.push(newSiswa.slice(i, i+400));
+    for(const chunk of chunks){
+      const batch = fbDb.batch();
+      chunk.forEach(s => {
+        const ref = fbDb.collection('siswa').doc();
+        batch.set(ref, {
+          nama: s.nama, kelas: s.kelas || 'Umum', status: 'aktif',
+          tahunMasuk: tahunAjaranAktif,
+          createdBy: currentUser.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      await batch.commit();
+    }
+    showToast(`✅ ${newSiswa.length} siswa berhasil diimport!`, 'success', 4000);
+    closeImportPreview();
+  } catch(err){
+    showToast('Gagal simpan: ' + err.message, 'error');
+    document.getElementById('btnKonfirmasiImport').disabled = false;
+    document.getElementById('btnKonfirmasiImport').textContent = '✅ Import Sekarang';
+  }
+  _importPending = [];
+}
+
+function closeImportPreview(e){
+  if(!e || e.target === document.getElementById('importPreviewOverlay')){
+    document.getElementById('importPreviewOverlay').classList.remove('show');
+    _importPending = [];
+  }
+}
+
+// ── Tambah siswa manual ──────────────────────────────────────
+function openTambahSiswaManual(){
+  document.getElementById('manualSiswaNama').value = '';
+  document.getElementById('manualSiswaKelas').value = '';
+  document.getElementById('manualSiswaError').style.display = 'none';
+  document.getElementById('tambahSiswaManualOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('manualSiswaNama').focus(), 100);
+}
+
+function closeTambahSiswaManual(e){
+  if(!e || e.target === document.getElementById('tambahSiswaManualOverlay')){
+    document.getElementById('tambahSiswaManualOverlay').classList.remove('show');
+  }
+}
+
+async function simpanSiswaManual(){
+  const nama = document.getElementById('manualSiswaNama').value.trim();
+  const kelas = document.getElementById('manualSiswaKelas').value.trim() || 'Umum';
+  const errEl = document.getElementById('manualSiswaError');
+  errEl.style.display = 'none';
+  if(!nama){ errEl.textContent = 'Nama tidak boleh kosong'; errEl.style.display = 'block'; return; }
+  if(masterSiswa.some(s => s.nama.toLowerCase() === nama.toLowerCase())){
+    errEl.textContent = 'Siswa dengan nama ini sudah ada'; errEl.style.display = 'block'; return;
+  }
+  showSyncing();
+  try {
+    await fbDb.collection('siswa').doc().set({
+      nama, kelas, status: 'aktif',
+      tahunMasuk: tahunAjaranAktif,
+      createdBy: currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`Siswa "${nama}" berhasil ditambahkan`, 'success');
+    closeTambahSiswaManual();
+  } catch(err){
+    errEl.textContent = 'Gagal: ' + err.message; errEl.style.display = 'block';
+  }
+}
+
 
 function updateStrip(){
   const s=document.getElementById('istrip');
@@ -4725,7 +4776,6 @@ window.delSetoran = function(id, fbId){
 };
 
 window.hapusSemuaSetoran = function(){
-  if(!isAdmin){ showToast('Hanya admin yang bisa menghapus semua riwayat', 'warning'); return; }
   if(!dataSetoran.length){ showToast('Sudah kosong','warning'); return; }
   if(!confirm(`Hapus ${dataSetoran.length} riwayat setoran? Ini akan menghapus dari server juga!`)) return;
   showSyncing();
@@ -5776,185 +5826,37 @@ function showToastSafe(msg, type, duration){
 </div>
 
 
-<!-- ════════ USER MENU ════════ -->
-<div id="userMenuOverlay" onclick="closeUserMenu()" style="display:none; position:fixed; inset:0; z-index:7000; background:rgba(0,0,0,.3);">
-  <div onclick="event.stopPropagation()" style="position:absolute; top:58px; right:10px; background:#fff; border-radius:14px; padding:12px; min-width:200px; box-shadow:0 4px 20px rgba(0,0,0,.2);">
-    <div style="display:flex; align-items:center; gap:10px; padding-bottom:12px; border-bottom:1px solid var(--brd); margin-bottom:10px;">
-      <div id="umAvatar" class="guru-avatar-sm">?</div>
-      <div>
-        <div id="umNama" style="font-weight:700; font-size:.88rem;"></div>
-        <div id="umEmail" style="font-size:.72rem; color:var(--mut);"></div>
-        <div id="umRole" style="font-size:.7rem; font-weight:700; margin-top:2px;"></div>
-      </div>
-    </div>
-    <div id="umTahunAjaran" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--brd);">
-      <span style="font-size:.78rem; color:var(--mut);">Tahun Ajaran</span>
-      <button class="ta-pill" id="umTaPill" onclick="closeUserMenu(); openAdminPanel('tahun')">—</button>
-    </div>
-    <button onclick="closeUserMenu(); openAdminPanel('siswa')" id="btnAdminMenu"
-      style="display:none; width:100%; text-align:left; padding:8px 10px; border:none; background:var(--bg); border-radius:8px; font-size:.82rem; font-weight:700; color:var(--g7); cursor:pointer; margin-bottom:6px;">
-      👑 Panel Admin
-    </button>
 
-    <button onclick="signOutApp()"
-      style="width:100%; text-align:left; padding:8px 10px; border:none; background:#ffebee; border-radius:8px; font-size:.82rem; font-weight:700; color:var(--red); cursor:pointer;">
-      🚪 Keluar
-    </button>
+<!-- ════════ IMPORT PREVIEW MODAL ════════ -->
+<div class="edit-overlay" id="importPreviewOverlay" onclick="closeImportPreview(event)">
+  <div class="edit-card" onclick="event.stopPropagation()" style="max-width:480px;">
+    <h3>📋 Preview Import Siswa</h3>
+    <div id="importPreviewInfo" style="font-size:.8rem;color:var(--mut);margin-bottom:10px;"></div>
+    <div id="importPreviewList" style="max-height:260px;overflow-y:auto;border:1px solid var(--brd);border-radius:8px;font-size:.82rem;"></div>
+    <div id="importPreviewWarn" style="margin-top:10px;font-size:.78rem;color:var(--amber);display:none;"></div>
+    <div class="edit-actions" style="margin-top:14px;">
+      <button class="btn bo" onclick="closeImportPreview()">Batal</button>
+      <button class="btn bp" id="btnKonfirmasiImport" onclick="konfirmasiImport()">✅ Import Sekarang</button>
+    </div>
   </div>
 </div>
 
-<!-- ════════ ADMIN FAB ════════ -->
-<button id="adminFab" onclick="openAdminPanel('siswa')" title="Panel Admin">👑</button>
-
-<!-- ════════ ADMIN PANEL ════════ -->
-<div class="admin-overlay" id="adminOverlay" onclick="closeAdminPanel(event)">
-  <div class="admin-sheet" onclick="event.stopPropagation()">
-    <div class="admin-hdr">
-      <span style="font-size:1.2rem;">👑</span>
-      <span class="admin-hdr-title">Panel Admin</span>
-      <button class="admin-close" onclick="closeAdminPanel()">×</button>
+<!-- ════════ TAMBAH SISWA MANUAL MODAL ════════ -->
+<div class="edit-overlay" id="tambahSiswaManualOverlay" onclick="closeTambahSiswaManual(event)">
+  <div class="edit-card" onclick="event.stopPropagation()">
+    <h3>➕ Tambah Siswa</h3>
+    <div class="form-row">
+      <label>Nama Siswa <span style="color:var(--red)">*</span></label>
+      <input type="text" id="manualSiswaNama" placeholder="Nama lengkap siswa" autocapitalize="words">
     </div>
-    <div class="admin-tabs" id="adminTabs">
-      <button class="admin-tab on" onclick="switchAdminTab('siswa')">👥 Siswa</button>
-      <button class="admin-tab" onclick="switchAdminTab('guru')">👨‍🏫 Guru</button>
-      <button class="admin-tab" onclick="switchAdminTab('kode')">🔑 Kode Undangan</button>
-      <button class="admin-tab" onclick="switchAdminTab('tahun')">📅 Tahun Ajaran</button>
+    <div class="form-row">
+      <label>Kelas <span style="font-weight:400;color:var(--mut)">(opsional)</span></label>
+      <input type="text" id="manualSiswaKelas" placeholder="Contoh: 1A, Kelas 2, dll">
     </div>
-    <div class="admin-body">
-
-      <!-- ── Panel Siswa ── -->
-      <div class="admin-panel show" id="apSiswa">
-        <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
-          <button class="btn bp bsm" onclick="openAddSiswa()">+ Tambah Siswa</button>
-          <button class="btn bo bsm" onclick="openNaikKelas()">📈 Naik Kelas Massal</button>
-        </div>
-        <!-- Filter status -->
-        <div style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto; scrollbar-width:none; padding-bottom:4px;">
-          <button class="fchip on" id="fsAktif" onclick="setFilterSiswaAdmin('aktif')">Aktif</button>
-          <button class="fchip" id="fsLulus" onclick="setFilterSiswaAdmin('lulus')">Lulus</button>
-          <button class="fchip" id="fsArsip" onclick="setFilterSiswaAdmin('arsip')">Arsip</button>
-        </div>
-        <!-- Search -->
-        <input type="text" id="searchSiswaAdmin" placeholder="Cari nama siswa..."
-          oninput="renderAdminSiswaList()"
-          style="width:100%; padding:8px 12px; border:1.5px solid var(--brd); border-radius:9px; font-size:.82rem; margin-bottom:10px; outline:none; background:var(--surf2);">
-        <div id="adminSiswaList"></div>
-      </div>
-
-      <!-- ── Panel Guru ── -->
-      <div class="admin-panel" id="apGuru">
-
-        <!-- Tab: Tambah 1 / Massal -->
-        <div style="display:flex; gap:6px; margin-bottom:12px;">
-          <button class="fchip on" id="guruTab1" onclick="switchGuruTab('satu')">➕ Tambah Satu</button>
-          <button class="fchip" id="guruTabMassal" onclick="switchGuruTab('massal')">📋 Massal</button>
-        </div>
-
-        <!-- Panel: Tambah Satu -->
-        <div id="guruPanelSatu">
-          <div style="background:var(--bg); border-radius:12px; padding:14px; margin-bottom:14px;">
-            <div class="form-row">
-              <label>Nama Lengkap</label>
-              <input type="text" id="newGuruNama" placeholder="Contoh: Ustadz Ahmad">
-            </div>
-            <div class="form-row">
-              <label>Username <span style="font-weight:400;color:var(--mut)">(huruf kecil, tanpa spasi)</span></label>
-              <input type="text" id="newGuruUsername" placeholder="Contoh: ahmad" autocapitalize="none">
-            </div>
-            <div class="form-row">
-              <label>Password</label>
-              <input type="password" id="newGuruPassword" placeholder="Min. 6 karakter">
-            </div>
-            <div id="newGuruError" style="color:var(--red);font-size:.78rem;margin-bottom:8px;display:none;"></div>
-            <button class="btn bp bfull" onclick="tambahGuruBaru()">Buat Akun Guru</button>
-          </div>
-        </div>
-
-        <!-- Panel: Tambah Massal -->
-        <div id="guruPanelMassal" style="display:none;">
-          <div style="background:var(--bg); border-radius:12px; padding:14px; margin-bottom:14px;">
-            <div class="info-badge" style="margin-bottom:12px;">
-              💡 Ketik satu nama guru per baris. Username & password akan dibuat otomatis. Catat hasilnya untuk dibagikan ke guru.
-            </div>
-            <div class="form-row">
-              <label>Daftar Nama Guru (1 nama per baris)</label>
-              <textarea id="massalNamaInput" rows="6"
-                style="width:100%;padding:10px;border:1.5px solid var(--brd);border-radius:9px;font-size:.85rem;resize:vertical;outline:none;font-family:inherit;background:var(--surf2);"
-                placeholder="Ustadz Ahmad&#10;Ustadzah Fatimah&#10;Ustadz Hasan&#10;Ustadzah Aisyah"></textarea>
-            </div>
-            <div id="massalGuruError" style="color:var(--red);font-size:.78rem;margin-bottom:8px;display:none;"></div>
-            <button class="btn bp bfull" onclick="importMassalGuru()">🚀 Generate & Buat Semua Akun</button>
-          </div>
-          <!-- Hasil -->
-          <div id="massalGuruHasil" style="display:none;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <div style="font-size:.82rem;font-weight:700;color:var(--g8);">✅ Akun Berhasil Dibuat</div>
-              <button onclick="salinSemuaAkun()" style="padding:5px 12px;border:none;background:var(--g1);color:var(--g7);border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;">📋 Salin Semua</button>
-            </div>
-            <div id="massalGuruTabel"></div>
-            <div class="info-badge" style="margin-top:10px;background:#fff8e1;border-color:#ffe082;color:#7a5800;">
-              ⚠️ Catat username & password ini sekarang! Password tidak bisa dilihat lagi setelah halaman ditutup.
-            </div>
-          </div>
-        </div>
-
-        <!-- Daftar Guru -->
-        <div style="font-size:.82rem;font-weight:700;color:var(--mut);margin:12px 0 8px;text-transform:uppercase;letter-spacing:.3px;">Daftar Guru Terdaftar</div>
-        <div id="adminGuruList"></div>
-      </div>
-
-      <!-- ── Panel Kode Undangan ── -->
-      <div class="admin-panel" id="apKode">
-        <div style="background:var(--bg); border-radius:12px; padding:14px; margin-bottom:14px;">
-          <div style="font-size:.82rem; font-weight:700; color:var(--txt); margin-bottom:10px;">Buat Kode Baru</div>
-          <div class="form-row">
-            <label>Kode Undangan (huruf/angka)</label>
-            <input type="text" id="newCodeInput" placeholder="Contoh: GURU2025" maxlength="20"
-              style="text-transform:uppercase; letter-spacing:2px; font-weight:700;">
-          </div>
-          <div class="form-row">
-            <label>Tipe</label>
-            <select id="newCodeType">
-              <option value="unlimited">Tidak terbatas (pakai berkali-kali)</option>
-              <option value="limited">Terbatas — maks berapa guru</option>
-              <option value="single">Sekali pakai</option>
-            </select>
-          </div>
-          <div class="form-row" id="maxUseRow" style="display:none;">
-            <label>Maks. jumlah pemakai</label>
-            <input type="number" id="newCodeMaxUse" value="5" min="1" max="100">
-          </div>
-          <div class="form-row">
-            <label>Expired (opsional — kosongkan = tidak expired)</label>
-            <input type="date" id="newCodeExpiry">
-          </div>
-          <div class="form-row">
-            <label>Catatan / label (opsional)</label>
-            <input type="text" id="newCodeLabel" placeholder="misal: Batch Guru 2025/2026">
-          </div>
-          <button class="btn bp bfull" onclick="buatKodeUndangan()">Buat Kode</button>
-        </div>
-        <div style="font-size:.82rem; font-weight:700; margin-bottom:8px;">Kode Aktif</div>
-        <div id="adminKodeList"></div>
-      </div>
-
-      <!-- ── Panel Tahun Ajaran ── -->
-      <div class="admin-panel" id="apTahun">
-        <div style="background:var(--bg); border-radius:12px; padding:16px; margin-bottom:16px;">
-          <div style="font-size:.82rem; color:var(--mut); margin-bottom:8px;">Tahun Ajaran Aktif saat ini:</div>
-          <div id="taCurrent" style="font-size:1.3rem; font-weight:900; color:var(--g8); margin-bottom:16px;">—</div>
-          <div class="form-row">
-            <label>Ganti Tahun Ajaran</label>
-            <input type="text" id="taInput" placeholder="Contoh: 2025/2026"
-              style="font-size:1rem; font-weight:700; text-align:center;">
-          </div>
-          <button class="btn bp bfull" onclick="gantiTahunAjaran()">Simpan Tahun Ajaran</button>
-        </div>
-        <div class="info-badge">
-          💡 Mengganti tahun ajaran tidak menghapus data lama. Data lama tetap tersimpan dan bisa dilihat via filter.
-        </div>
-      </div>
-
+    <div id="manualSiswaError" style="color:var(--red);font-size:.8rem;margin-top:6px;display:none;"></div>
+    <div class="edit-actions" style="margin-top:14px;">
+      <button class="btn bo" onclick="closeTambahSiswaManual()">Batal</button>
+      <button class="btn bp" onclick="simpanSiswaManual()">Simpan</button>
     </div>
   </div>
 </div>
