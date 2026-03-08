@@ -2942,13 +2942,23 @@ function showBlockedScreen(){
 
 function signInWithGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  fbAuth.signInWithPopup(provider).catch(err => {
+  fbAuth.signInWithRedirect(provider).catch(err => {
     console.error('[FB] Sign-in error:', err);
-    if(err.code !== 'auth/popup-closed-by-user'){
-      showToastSafe('Gagal masuk: ' + err.message, 'error');
-    }
+    showToastSafe('Gagal masuk: ' + err.message, 'error');
   });
 }
+
+// Handle redirect result setelah kembali dari halaman Google
+fbAuth.getRedirectResult().then(result => {
+  if(result && result.user){
+    console.log('[FB] Redirect login berhasil:', result.user.email);
+  }
+}).catch(err => {
+  console.error('[FB] Redirect result error:', err);
+  if(err.code !== 'auth/popup-closed-by-user'){
+    showToastSafe('Gagal masuk: ' + err.message, 'error');
+  }
+});
 
 function signOutApp(){
   // Cleanup listeners
