@@ -3088,7 +3088,9 @@ async function checkPasswordReset(uid){
 }
 
 async function doLogin(){
-  const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+  const usernameRaw = document.getElementById('loginUsername').value.trim();
+  // Bersihkan jika user tidak sengaja ketik @tamma.app
+  const username = usernameRaw.replace('@tamma.app','').toLowerCase().replace(/\s/g,'');
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   const btn = document.getElementById('btnLogin');
@@ -3098,13 +3100,29 @@ async function doLogin(){
   btn.disabled = true; btn.textContent = 'Memuat...';
   try {
     const email = username + '@tamma.app';
+    console.log('[FB] Mencoba login dengan:', email);
     await fbAuth.signInWithEmailAndPassword(email, password);
     // onAuthStateChanged akan handle selanjutnya
   } catch(err) {
-    console.error('[FB] Login error:', err);
-    let msg = 'Username atau password salah';
-    if(err.code === 'auth/too-many-requests') msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
-    if(err.code === 'auth/network-request-failed') msg = 'Tidak ada koneksi internet';
+    console.error('[FB] Login error code:', err.code, err.message);
+    let msg = '';
+    switch(err.code){
+      case 'auth/user-not-found':
+        msg = 'Username tidak ditemukan. Hubungi admin.'; break;
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        msg = 'Password salah. Coba lagi atau hubungi admin.'; break;
+      case 'auth/invalid-email':
+        msg = 'Format username tidak valid.'; break;
+      case 'auth/user-disabled':
+        msg = 'Akun dinonaktifkan. Hubungi admin.'; break;
+      case 'auth/too-many-requests':
+        msg = 'Terlalu banyak percobaan. Tunggu beberapa menit.'; break;
+      case 'auth/network-request-failed':
+        msg = 'Tidak ada koneksi internet.'; break;
+      default:
+        msg = 'Gagal login: ' + err.code;
+    }
     errEl.textContent = msg;
     errEl.style.display = 'block';
   } finally {
