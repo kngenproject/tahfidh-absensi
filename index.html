@@ -394,7 +394,7 @@ select, input[type=file] {
   padding:9px 10px; 
   border:1.5px solid var(--brd); 
   border-radius:var(--rs); 
-  font-size:var(--flg); /* serasi dengan elemen lain */
+  font-size:var(--fsm); /* diperkecil dari --flg */
   color:var(--txt); 
   background:var(--surf2); 
   outline:none; 
@@ -4276,6 +4276,7 @@ function updateStrip(){
 let activeKelasTahfidh = 'SEMUA';
 let activeKelasAbsen = 'SEMUA';
 let activeKelasViewer = 'SEMUA';
+let activeKelasMpa = 'SEMUA';
 
 function getKelasUnik(source){
   if(source === 'viewer'){
@@ -5559,16 +5560,33 @@ let mpaMode = 'cepat';
 let mpaChecked = new Set();
 let mpaArah = 'naba-nas'; // 'naba-nas' = An-Naba'→An-Nas | 'nas-naba' = An-Nas→An-Naba'
 
+function populateMpaSiswaDropdown(){
+  const sel = document.getElementById('mpaSiswa');
+  sel.innerHTML = '<option value="">— Pilih Siswa —</option>';
+  const filtered = activeKelasMpa === 'SEMUA'
+    ? masterSiswa
+    : masterSiswa.filter(s => (s.kelas||'Umum').trim() === activeKelasMpa);
+  const sorted = [...filtered].sort((a,b) => a.nama.localeCompare(b.nama,'id'));
+  sorted.forEach(s => sel.add(new Option(s.nama, s.nama)));
+  document.getElementById('mpaExistWarning').style.display = 'none';
+}
+
+function setKelasMpa(k){
+  activeKelasMpa = k;
+  renderKelasChips('kelasChipsMpa','kelasFilterMpa', activeKelasMpa, 'setKelasMpa', 'master');
+  populateMpaSiswaDropdown();
+}
+
 function openPencapaian(){
   if(!masterSiswa.length){
     showToast('Import data siswa terlebih dahulu','warning');
     return;
   }
+  // Reset kelas filter
+  activeKelasMpa = 'SEMUA';
+  renderKelasChips('kelasChipsMpa','kelasFilterMpa', activeKelasMpa, 'setKelasMpa', 'master');
   // Populate siswa dropdown
-  const sel = document.getElementById('mpaSiswa');
-  sel.innerHTML = '<option value="">— Pilih Siswa —</option>';
-  const sorted = [...masterSiswa].sort((a,b) => a.nama.localeCompare(b.nama,'id'));
-  sorted.forEach(s => sel.add(new Option(s.nama, s.nama)));
+  populateMpaSiswaDropdown();
 
   // Mode Cepat dropdown will be built by setMpaArah()
 
@@ -6021,6 +6039,12 @@ window.hapusSiswa = async function(fbId){
       <!-- Info -->
       <div class="info-badge">
         💡 Gunakan fitur ini untuk siswa yang sudah hafal sebagian surat sebelum memakai aplikasi ini. Data akan disimpan sebagai <strong>Data Awal</strong> dan langsung terhitung di progress.
+      </div>
+
+      <!-- Filter Kelas -->
+      <div id="kelasFilterMpa" style="display:none; margin-bottom:10px;">
+        <label class="flbl">Filter Kelas</label>
+        <div id="kelasChipsMpa" class="frow" style="flex-wrap:wrap; margin-bottom:0;"></div>
       </div>
 
       <!-- Pilih Siswa -->
