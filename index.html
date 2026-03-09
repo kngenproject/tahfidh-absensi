@@ -161,10 +161,10 @@ body {
   display:flex; 
   align-items:center; 
   justify-content:center; 
-  font-size:var(--fsm); 
+  font-size:20px; 
 }
 .hdr-title { 
-  font-size:var(--fsm); 
+  font-size:13px; 
   font-weight:800; 
   color:#fff; 
   letter-spacing:.3px; 
@@ -174,7 +174,7 @@ body {
   text-overflow: ellipsis;
 }
 .hdr-sub { 
-  font-size:var(--fsm); 
+  font-size:9px; 
   color:rgba(255,255,255,.7); 
   margin-top:1px; 
 }
@@ -186,7 +186,7 @@ body {
   flex-shrink:0; 
 }
 .hdr-date { 
-  font-size:var(--fsm); 
+  font-size:11px; 
   color:rgba(255,255,255,.8); 
   background:rgba(255,255,255,.12); 
   padding:3px 8px; 
@@ -1891,6 +1891,30 @@ span > .fai, div > .fai { vertical-align: middle; }
   color: #92400e;
   margin-bottom: 12px;
   line-height: 1.4;
+}
+.mpa-ket-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 9px 6px;
+  border: 1.5px solid var(--brd);
+  border-radius: var(--rs);
+  background: var(--surf2);
+  color: var(--mut);
+  font-size: var(--fsm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+  line-height: 1.2;
+  text-align: center;
+}
+.mpa-ket-btn:active { transform: scale(.96); }
+.mpa-ket-btn.on {
+  background: var(--g1);
+  border-color: var(--g5);
+  color: var(--g8);
 }
 .mpa-footer {
   flex-shrink: 0;
@@ -6094,6 +6118,7 @@ function openPencapaian(){
   document.getElementById('mpaAyatWrap').style.display = 'none';
   document.getElementById('mpaAyatHelper').style.display = 'none';
   setMpaArah('naba-nas');
+  resetMpaKet();
   buildSuratCheckGrid();
   document.getElementById('modalPencapaian').classList.add('show');
 }
@@ -6331,6 +6356,17 @@ function getTglFromInput(){
   return `${parseInt(d)}/${parseInt(m)}/${y}`;
 }
 
+function setMpaKet(val, btn){
+  document.getElementById('mpaKet').value = val;
+  document.querySelectorAll('.mpa-ket-btn').forEach(b => b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+}
+
+function resetMpaKet(){
+  document.getElementById('mpaKet').value = '';
+  document.querySelectorAll('.mpa-ket-btn').forEach(b => b.classList.remove('on'));
+}
+
 async function simpanPencapaianAwal(){
   const nama = document.getElementById('mpaSiswa').value;
   if(!nama){ showToast('Pilih nama siswa terlebih dahulu','warning'); return; }
@@ -6354,6 +6390,7 @@ async function simpanPencapaianAwal(){
   }
 
   const tgl = getTglFromInput();
+  const mpaKetVal = document.getElementById('mpaKet').value || '';
 
   // Determine partial ayat for the boundary surat (Mode Cepat only)
   let partialIdx = null;
@@ -6394,7 +6431,7 @@ async function simpanPencapaianAwal(){
       stat,
       salah: '-',
       jml: 0,
-      tambahan: 'Data Awal',
+      tambahan: mpaKetVal || 'Data Awal',
       kategori: '-'
     };
   });
@@ -6786,6 +6823,27 @@ function selectCsdItem(value, label) {
           </div>
         </div>
         <div class="surat-check-grid" id="suratCheckGrid"></div>
+      </div>
+
+      <!-- Keterangan Setoran -->
+      <div style="margin-top:14px;">
+        <label class="flbl">Keterangan</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:4px;" id="mpaKetGrid">
+          <button type="button" class="mpa-ket-btn" id="mpaKetBtnBelum" onclick="setMpaKet('Belum Khatam',this)">
+            <span style="font-size:1.1em;">📖</span>
+            <span>Belum Khatam</span>
+          </button>
+          <button type="button" class="mpa-ket-btn" id="mpaKetBtnMuroja" onclick="setMpaKet(&quot;Muroja'ah&quot;,this)">
+            <span style="font-size:1.1em;">🔁</span>
+            <span>Muroja'ah</span>
+          </button>
+          <button type="button" class="mpa-ket-btn" id="mpaKetBtnTasmi" onclick="setMpaKet(&quot;Tasmi'&quot;,this)">
+            <span style="font-size:1.1em;">🎤</span>
+            <span>Tasmi'</span>
+          </button>
+        </div>
+        <input type="hidden" id="mpaKet" value="">
+        <div style="font-size:var(--fxs); color:var(--mut); margin-top:4px;">Opsional — kosongkan jika tidak relevan</div>
       </div>
 
       <!-- Tanggal -->
