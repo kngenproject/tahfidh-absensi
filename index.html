@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Tamma-Tahfidh Juz Amma (Offline Ready)</title>
+<title>Tamma-Tahfidh Juz Amma</title>
 <meta name="theme-color" content="#0c4a2a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -161,10 +161,10 @@ body {
   display:flex; 
   align-items:center; 
   justify-content:center; 
-  font-size:var(--fxl); 
+  font-size:20px; 
 }
 .hdr-title { 
-  font-size:var(--flg); 
+  font-size:13px; 
   font-weight:800; 
   color:#fff; 
   letter-spacing:.3px; 
@@ -174,7 +174,7 @@ body {
   text-overflow: ellipsis;
 }
 .hdr-sub { 
-  font-size:var(--fsm); 
+  font-size:9px; 
   color:rgba(255,255,255,.7); 
   margin-top:1px; 
 }
@@ -186,7 +186,7 @@ body {
   flex-shrink:0; 
 }
 .hdr-date { 
-  font-size:var(--fsm); 
+  font-size:11px; 
   color:rgba(255,255,255,.8); 
   background:rgba(255,255,255,.12); 
   padding:3px 8px; 
@@ -1649,7 +1649,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
     --f4xl: 1.90rem;
   }
   .pg { padding: 8px; }
-  .hdr-sub { display: none; }
+  .hdr-sub { display: true; }
   .badges-grid { grid-template-columns: repeat(3, 1fr) !important; }
   .strow { grid-template-columns: repeat(4, 1fr) !important; }
 }
@@ -2320,7 +2320,7 @@ span > .fai, div > .fai { vertical-align: middle; }
         <svg class="fai" viewBox="0 0 448 512" aria-hidden="true"><path d="M219.3 .5c3.1-.6 6.3-.6 9.4 0l200 40C439.9 42.7 448 52.6 448 64s-8.1 21.3-19.3 23.5L352 102.9V160c0 70.7-57.3 128-128 128s-128-57.3-128-128V102.9L48 93.3V184c0 13.3-10.7 24-24 24s-24-10.7-24-24V64C0 52.6 8.1 42.7 19.3 40.5l200-40zM105.8 123.3L224 147.1l118.2-23.8V175.1c0 44.2-35.8 80-80 80H185.8c-44.2 0-80-35.8-80-80V123.3zM1.5 433.1L44.6 421c9.1 21.2 22.8 39.8 40 55.1L16.4 502.6c-11 3.6-23.1-2.3-26.8-13.4s2.3-23.1 13.4-26.8l-1.5-.3zM256 336c0 17.7 14.3 32 32 32s32-14.3 32-32v-9.1c15.1-9.4 26.3-24.1 30.7-41.5l11.4-45.5c10-39.9-14.3-80.5-54.2-90.5s-80.5 14.3-90.5 54.2L206 249.6c-4.4 17.4-1.4 35.5 7.8 50.5l-31.2 8.2c-9.1 2.4-14.5 11.7-12.1 20.8s11.7 14.5 20.8 12.1l39.6-10.4c5.5 4.3 11.5 7.9 18 10.9V336z"/></svg>
         <span class="siswa-selector-label">Siswa</span>
         <button type="button" class="csd-trigger placeholder" id="dashboardSiswaSelectTrigger" onclick="openCsdSiswa('dashboardSiswaSelect')" style="flex:1;">
-          <span id="dashboardSiswaSelectLabel">— Semua Siswa —</span>
+          <span id="dashboardSiswaSelectLabel">— Pilih Siswa —</span>
           <span class="csd-trigger-arrow">▼</span>
         </button>
         <select id="dashboardSiswaSelect" style="display:none;" onchange="onDashboardSiswaChange();">
@@ -2473,9 +2473,22 @@ span > .fai, div > .fai { vertical-align: middle; }
               <span id="namaSiswaLabel">— Pilih Siswa —</span>
               <span class="csd-trigger-arrow">▼</span>
             </button>
-            <select id="namaSiswa" style="display:none;"></select>
+            <select id="namaSiswa" style="display:none;" onchange="showSiswaHafalanHistory(this.value);"></select>
           </div>
-          <!-- Surat Juz 30 + Ayat -->
+          <!-- Riwayat Hafalan Terakhir Siswa (muncul setelah pilih siswa) -->
+          <div id="siswaHafalanHistory" style="display:none; margin-top:8px; background:var(--g0); border:1.5px solid var(--brd); border-radius:var(--rs); padding:10px; font-size:var(--fsm);"></div>
+
+          <!-- Pilih Juz -->
+          <div class="mt8">
+            <label class="flbl">Pilih Juz</label>
+            <button type="button" class="csd-trigger placeholder" id="juzSelectTrigger" onclick="openCsd('juzSelect','📚 Pilih Juz')">
+              <span id="juzSelectLabel">Juz 30 — Juz Amma</span>
+              <span class="csd-trigger-arrow">▼</span>
+            </button>
+            <select id="juzSelect" style="display:none;" onchange="onJuzChange();"></select>
+          </div>
+
+          <!-- Surat + Ayat -->
           <div class="g3 mt8">
             <div>
               <label class="flbl">Surat</label>
@@ -3038,28 +3051,6 @@ function signOutApp(){ showToast("Tidak ada sesi untuk diakhiri", "info"); }
 function simpanUsername(){ showToast('Fitur ini tidak tersedia dalam mode tanpa login', 'info'); }
 function simpanPassword(){ showToast('Fitur ini tidak tersedia dalam mode tanpa login', 'info'); }
 function submitInviteCode(){ showToast('Tidak diperlukan kode undangan', 'info'); }
-
-
-
-
-// ─── Load config (tahun ajaran) ────────────────────────────────
-async function loadConfig(){
-  try {
-    const snap = await fbDb.collection('config').doc('app').get();
-    if(snap.exists && snap.data().tahunAjaranAktif){
-      tahunAjaranAktif = snap.data().tahunAjaranAktif;
-    } else {
-      // Default: infer from current date
-      const y = new Date().getFullYear();
-      const m = new Date().getMonth();
-      tahunAjaranAktif = m >= 6 ? `${y}/${y+1}` : `${y-1}/${y}`;
-    }
-    const _taC=document.getElementById('taCurrent'); if(_taC) _taC.textContent = tahunAjaranAktif;
-    const _taI=document.getElementById('taInput'); if(_taI) _taI.value = tahunAjaranAktif;
-    document.getElementById('hdrSub').textContent = `Tahun Ajaran ${tahunAjaranAktif}`;
-  } catch(e) { console.warn('[FB] loadConfig:', e); }
-}
-
 // Fetch data dari Firestore (sekali saat load, bukan realtime)
 async function setupRealtimeListeners(){
   fbListeners.forEach(u => u());
@@ -3615,33 +3606,238 @@ function checkDailyStreak(){
 checkDailyStreak();
 
 /* ==============================
-   SURAT JUZ 30
+   DATA SURAT LENGKAP (30 JUZ / 114 SURAT)
 ============================== */
-const SURAT_JUZ30 = [
-  {n:78, nm:"An-Naba'", a:40}, {n:79, nm:"An-Nazi'at", a:46}, {n:80, nm:"'Abasa", a:42},
-  {n:81, nm:"At-Takwir", a:29}, {n:82, nm:"Al-Infitar", a:19}, {n:83, nm:"Al-Mutaffifin", a:36},
-  {n:84, nm:"Al-Inshiqaq", a:25}, {n:85, nm:"Al-Buruj", a:22}, {n:86, nm:"At-Tariq", a:17},
-  {n:87, nm:"Al-A'la", a:19}, {n:88, nm:"Al-Ghashiyah", a:26}, {n:89, nm:"Al-Fajr", a:30},
-  {n:90, nm:"Al-Balad", a:20}, {n:91, nm:"Ash-Shams", a:15}, {n:92, nm:"Al-Layl", a:21},
-  {n:93, nm:"Ad-Duha", a:11}, {n:94, nm:"Ash-Sharh", a:8}, {n:95, nm:"At-Tin", a:8},
-  {n:96, nm:"Al-'Alaq", a:19}, {n:97, nm:"Al-Qadr", a:5}, {n:98, nm:"Al-Bayyinah", a:8},
-  {n:99, nm:"Az-Zalzalah", a:8}, {n:100, nm:"Al-'Adiyat", a:11}, {n:101, nm:"Al-Qari'ah", a:11},
-  {n:102, nm:"At-Takathur", a:8}, {n:103, nm:"Al-'Asr", a:3}, {n:104, nm:"Al-Humazah", a:9},
-  {n:105, nm:"Al-Fil", a:5}, {n:106, nm:"Quraish", a:4}, {n:107, nm:"Al-Ma'un", a:7},
-  {n:108, nm:"Al-Kawthar", a:3}, {n:109, nm:"Al-Kafirun", a:6}, {n:110, nm:"An-Nasr", a:3},
-  {n:111, nm:"Al-Masad", a:5}, {n:112, nm:"Al-Ikhlas", a:4}, {n:113, nm:"Al-Falaq", a:5},
-  {n:114, nm:"An-Nas", a:6}
+const ALL_SURAT = [
+  // JUZ 1
+  {n:1,  nm:"Al-Fatihah",      a:7,   juz:1},
+  {n:2,  nm:"Al-Baqarah",      a:286, juz:1},
+  // JUZ 3
+  {n:3,  nm:"Ali 'Imran",      a:200, juz:3},
+  // JUZ 4
+  {n:4,  nm:"An-Nisa'",        a:176, juz:4},
+  // JUZ 6
+  {n:5,  nm:"Al-Ma'idah",      a:120, juz:6},
+  // JUZ 7
+  {n:6,  nm:"Al-An'am",        a:165, juz:7},
+  // JUZ 8
+  {n:7,  nm:"Al-A'raf",        a:206, juz:8},
+  {n:8,  nm:"Al-Anfal",        a:75,  juz:9},
+  {n:9,  nm:"At-Tawbah",       a:129, juz:10},
+  {n:10, nm:"Yunus",           a:109, juz:11},
+  {n:11, nm:"Hud",             a:123, juz:11},
+  {n:12, nm:"Yusuf",           a:111, juz:12},
+  {n:13, nm:"Ar-Ra'd",         a:43,  juz:13},
+  {n:14, nm:"Ibrahim",         a:52,  juz:13},
+  {n:15, nm:"Al-Hijr",         a:99,  juz:14},
+  {n:16, nm:"An-Nahl",         a:128, juz:14},
+  {n:17, nm:"Al-Isra'",        a:111, juz:15},
+  {n:18, nm:"Al-Kahf",         a:110, juz:15},
+  {n:19, nm:"Maryam",          a:98,  juz:16},
+  {n:20, nm:"Ta Ha",           a:135, juz:16},
+  {n:21, nm:"Al-Anbiya'",      a:112, juz:17},
+  {n:22, nm:"Al-Hajj",         a:78,  juz:17},
+  {n:23, nm:"Al-Mu'minun",     a:118, juz:18},
+  {n:24, nm:"An-Nur",          a:64,  juz:18},
+  {n:25, nm:"Al-Furqan",       a:77,  juz:18},
+  {n:26, nm:"Asy-Syu'ara'",    a:227, juz:19},
+  {n:27, nm:"An-Naml",         a:93,  juz:19},
+  {n:28, nm:"Al-Qasas",        a:88,  juz:20},
+  {n:29, nm:"Al-Ankabut",      a:69,  juz:20},
+  {n:30, nm:"Ar-Rum",          a:60,  juz:21},
+  {n:31, nm:"Luqman",          a:34,  juz:21},
+  {n:32, nm:"As-Sajdah",       a:30,  juz:21},
+  {n:33, nm:"Al-Ahzab",        a:73,  juz:21},
+  {n:34, nm:"Saba'",           a:54,  juz:22},
+  {n:35, nm:"Fatir",           a:45,  juz:22},
+  {n:36, nm:"Ya-Sin",          a:83,  juz:22},
+  {n:37, nm:"As-Saffat",       a:182, juz:23},
+  {n:38, nm:"Sad",             a:88,  juz:23},
+  {n:39, nm:"Az-Zumar",        a:75,  juz:23},
+  {n:40, nm:"Gafir",           a:85,  juz:24},
+  {n:41, nm:"Fussilat",        a:54,  juz:24},
+  {n:42, nm:"Asy-Syura",       a:53,  juz:25},
+  {n:43, nm:"Az-Zukhruf",      a:89,  juz:25},
+  {n:44, nm:"Ad-Dukhan",       a:59,  juz:25},
+  {n:45, nm:"Al-Jasiyah",      a:37,  juz:25},
+  {n:46, nm:"Al-Ahqaf",        a:35,  juz:26},
+  {n:47, nm:"Muhammad",        a:38,  juz:26},
+  {n:48, nm:"Al-Fath",         a:29,  juz:26},
+  {n:49, nm:"Al-Hujurat",      a:18,  juz:26},
+  {n:50, nm:"Qaf",             a:45,  juz:26},
+  {n:51, nm:"Az-Zariyat",      a:60,  juz:26},
+  {n:52, nm:"At-Tur",          a:49,  juz:27},
+  {n:53, nm:"An-Najm",         a:62,  juz:27},
+  {n:54, nm:"Al-Qamar",        a:55,  juz:27},
+  {n:55, nm:"Ar-Rahman",       a:78,  juz:27},
+  {n:56, nm:"Al-Waqi'ah",      a:96,  juz:27},
+  {n:57, nm:"Al-Hadid",        a:29,  juz:27},
+  {n:58, nm:"Al-Mujadilah",    a:22,  juz:28},
+  {n:59, nm:"Al-Hasyr",        a:24,  juz:28},
+  {n:60, nm:"Al-Mumtahanah",   a:13,  juz:28},
+  {n:61, nm:"As-Saf",          a:14,  juz:28},
+  {n:62, nm:"Al-Jumu'ah",      a:11,  juz:28},
+  {n:63, nm:"Al-Munafiqun",    a:11,  juz:28},
+  {n:64, nm:"At-Tagabun",      a:18,  juz:28},
+  {n:65, nm:"At-Talaq",        a:12,  juz:28},
+  {n:66, nm:"At-Tahrim",       a:12,  juz:28},
+  {n:67, nm:"Al-Mulk",         a:30,  juz:29},
+  {n:68, nm:"Al-Qalam",        a:52,  juz:29},
+  {n:69, nm:"Al-Haqqah",       a:52,  juz:29},
+  {n:70, nm:"Al-Ma'arij",      a:44,  juz:29},
+  {n:71, nm:"Nuh",             a:28,  juz:29},
+  {n:72, nm:"Al-Jinn",         a:28,  juz:29},
+  {n:73, nm:"Al-Muzzammil",    a:20,  juz:29},
+  {n:74, nm:"Al-Muddassir",    a:56,  juz:29},
+  {n:75, nm:"Al-Qiyamah",      a:40,  juz:29},
+  {n:76, nm:"Al-Insan",        a:31,  juz:29},
+  {n:77, nm:"Al-Mursalat",     a:50,  juz:29},
+  // JUZ 30 — JUZ AMMA
+  {n:78, nm:"An-Naba'",        a:40,  juz:30},
+  {n:79, nm:"An-Nazi'at",      a:46,  juz:30},
+  {n:80, nm:"'Abasa",          a:42,  juz:30},
+  {n:81, nm:"At-Takwir",       a:29,  juz:30},
+  {n:82, nm:"Al-Infitar",      a:19,  juz:30},
+  {n:83, nm:"Al-Mutaffifin",   a:36,  juz:30},
+  {n:84, nm:"Al-Inshiqaq",     a:25,  juz:30},
+  {n:85, nm:"Al-Buruj",        a:22,  juz:30},
+  {n:86, nm:"At-Tariq",        a:17,  juz:30},
+  {n:87, nm:"Al-A'la",         a:19,  juz:30},
+  {n:88, nm:"Al-Ghashiyah",    a:26,  juz:30},
+  {n:89, nm:"Al-Fajr",         a:30,  juz:30},
+  {n:90, nm:"Al-Balad",        a:20,  juz:30},
+  {n:91, nm:"Ash-Shams",       a:15,  juz:30},
+  {n:92, nm:"Al-Layl",         a:21,  juz:30},
+  {n:93, nm:"Ad-Duha",         a:11,  juz:30},
+  {n:94, nm:"Ash-Sharh",       a:8,   juz:30},
+  {n:95, nm:"At-Tin",          a:8,   juz:30},
+  {n:96, nm:"Al-'Alaq",        a:19,  juz:30},
+  {n:97, nm:"Al-Qadr",         a:5,   juz:30},
+  {n:98, nm:"Al-Bayyinah",     a:8,   juz:30},
+  {n:99, nm:"Az-Zalzalah",     a:8,   juz:30},
+  {n:100,nm:"Al-'Adiyat",      a:11,  juz:30},
+  {n:101,nm:"Al-Qari'ah",      a:11,  juz:30},
+  {n:102,nm:"At-Takathur",     a:8,   juz:30},
+  {n:103,nm:"Al-'Asr",         a:3,   juz:30},
+  {n:104,nm:"Al-Humazah",      a:9,   juz:30},
+  {n:105,nm:"Al-Fil",          a:5,   juz:30},
+  {n:106,nm:"Quraish",         a:4,   juz:30},
+  {n:107,nm:"Al-Ma'un",        a:7,   juz:30},
+  {n:108,nm:"Al-Kawthar",      a:3,   juz:30},
+  {n:109,nm:"Al-Kafirun",      a:6,   juz:30},
+  {n:110,nm:"An-Nasr",         a:3,   juz:30},
+  {n:111,nm:"Al-Masad",        a:5,   juz:30},
+  {n:112,nm:"Al-Ikhlas",       a:4,   juz:30},
+  {n:113,nm:"Al-Falaq",        a:5,   juz:30},
+  {n:114,nm:"An-Nas",          a:6,   juz:30}
 ];
 
+// Backward compat alias
+const SURAT_JUZ30 = ALL_SURAT.filter(s => s.juz === 30);
+
+// Juz aktif di form setoran (default 30 = Juz Amma)
+let activeJuzSetoran = 30;
+
+// Isi select surat berdasar juz aktif
+function buildSuratDropdown(){
+  const sel = document.getElementById('surat');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Pilih Surat —</option>';
+  const list = ALL_SURAT.filter(s => s.juz === activeJuzSetoran);
+  list.forEach(s => sel.add(new Option(`${s.n}. ${s.nm}`, s.nm)));
+  // Restore selection jika masih ada
+  if([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  else sel.selectedIndex = list.length > 0 ? 1 : 0;
+  syncCsdTrigger('surat');
+  renderAyatList();
+}
+
+// Init juz selector
 (()=>{
-  const sel=document.getElementById('surat');
-  SURAT_JUZ30.forEach(s=>sel.add(new Option(`${s.n}. ${s.nm}`, s.nm)));
-  if(sel.options.length > 0){ sel.selectedIndex = 0; syncCsdTrigger('surat'); }
+  const juzSel = document.getElementById('juzSelect');
+  if(!juzSel) return;
+  for(let j = 1; j <= 30; j++){
+    const label = j === 30 ? `Juz ${j} — Juz Amma` : `Juz ${j}`;
+    juzSel.add(new Option(label, j));
+  }
+  juzSel.value = 30;
+  syncCsdTrigger('juzSelect');
+  buildSuratDropdown();
 })();
 
 /* ==============================
    DASHBOARD FUNCTIONS
 ============================== */
+
+// Dipanggil saat juz dropdown berubah
+function onJuzChange(){
+  activeJuzSetoran = parseInt(document.getElementById('juzSelect').value) || 30;
+  buildSuratDropdown();
+  // Update progress ring title
+  const title = document.querySelector('.progress-title');
+  if(title) title.textContent = `Progress Juz ${activeJuzSetoran}`;
+  updateProgressRing();
+}
+
+// Tampilkan riwayat hafalan terakhir siswa
+function showSiswaHafalanHistory(nama){
+  const panel = document.getElementById('siswaHafalanHistory');
+  if(!panel) return;
+  if(!nama){ panel.style.display='none'; return; }
+  const riwayat = dataSetoran.filter(s => s.nama === nama).slice(0, 5);
+  if(!riwayat.length){
+    panel.style.display = 'block';
+    panel.innerHTML = `<div style="color:var(--mut); text-align:center; padding:6px 0;">
+      <span style="font-size:var(--fxl);">📖</span> Belum ada riwayat hafalan untuk <b>${nama}</b>
+    </div>`;
+    return;
+  }
+  const suratHafal = new Set(dataSetoran.filter(s => s.nama === nama).map(s => s.surat));
+  const totalHafal = suratHafal.size;
+  const terakhir = riwayat[0];
+  const tglLabel = (() => {
+    const k = _setoranTglKey(terakhir);
+    if(!k || k==='0000-00-00') return '';
+    const d = new Date(k+'T00:00:00');
+    const todayKey = _localDateKey();
+    const yestKey = _localDateKey(new Date(Date.now()-86400000));
+    if(k === todayKey) return '• Hari ini';
+    if(k === yestKey) return '• Kemarin';
+    return '• ' + d.toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+  })();
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
+      <span style="font-weight:800; color:var(--g8); font-size:var(--fmd);">📚 Riwayat — ${nama}</span>
+      <span class="bdg bg" style="font-size:var(--fxs);">${totalHafal} surat hafal</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:#fff; border-radius:8px; border:1px solid var(--brd); margin-bottom:6px;">
+      <span style="font-size:var(--flg);">🕌</span>
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:700; font-size:var(--fmd); color:var(--txt);">${terakhir.surat}</div>
+        <div style="font-size:var(--fxs); color:var(--mut);">Ayat ${terakhir.rentang||'—'} ${tglLabel}</div>
+      </div>
+      <span class="bdg ${terakhir.stat==='L'?'bg':'bgd'}" style="flex-shrink:0; font-size:var(--fxs);">${terakhir.stat==='L'?'Lancar':'Kurang Lancar'}</span>
+    </div>
+    ${riwayat.length > 1 ? `<details style="margin-top:2px;">
+      <summary style="cursor:pointer; font-size:var(--fxs); color:var(--g7); font-weight:700; padding:3px 0;">Lihat ${riwayat.length-1} setoran lainnya ▼</summary>
+      <div style="margin-top:6px; display:flex; flex-direction:column; gap:5px;">
+        ${riwayat.slice(1).map(r => {
+          const k = _setoranTglKey(r);
+          const d = k&&k!=='0000-00-00' ? new Date(k+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'}) : '';
+          return `<div style="display:flex; align-items:center; gap:8px; padding:5px 8px; background:#fff; border-radius:6px; border:1px solid var(--brd);">
+            <div style="flex:1; min-width:0;">
+              <span style="font-weight:600; font-size:var(--fsm);">${r.surat}</span>
+              <span style="font-size:var(--fxs); color:var(--mut);"> • ayat ${r.rentang||'—'}${d?' • '+d:''}</span>
+            </div>
+            <span class="bdg ${r.stat==='L'?'bg':'bgd'}" style="font-size:var(--fxs);">${r.stat==='L'?'L':'KL'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </details>` : ''}
+  `;
+}
+
 function onDashboardSiswaChange(){
   activeDashboardSiswa = document.getElementById('dashboardSiswaSelect').value;
   updateDashboard();
@@ -3761,15 +3957,20 @@ function updateProgressRing(){
   const filtered = getFilteredSetoran();
   const completedSurat = new Set();
   filtered.forEach(s=> completedSurat.add(s.surat));
-  const total = SURAT_JUZ30.length;
-  const completed = completedSurat.size;
-  const percentage = Math.round((completed/total)*100);
+  // Hitung berdasar juz aktif di form
+  const juzList = ALL_SURAT.filter(s => s.juz === activeJuzSetoran);
+  const total = juzList.length;
+  const completed = juzList.filter(s => completedSurat.has(s.nm)).length;
+  const percentage = total > 0 ? Math.round((completed/total)*100) : 0;
   const circle = document.getElementById('progressCircle');
   const radius = 31;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage/100) * circumference;
   circle.style.strokeDashoffset = offset;
   document.getElementById('progressText').textContent = percentage+'%';
+  const juzLabel = activeJuzSetoran === 30 ? 'Juz Amma' : `Juz ${activeJuzSetoran}`;
+  const titleEl = document.querySelector('.progress-title');
+  if(titleEl) titleEl.textContent = `Progress ${juzLabel}`;
   if(activeDashboardSiswa === 'SEMUA'){
     document.getElementById('progressSub').textContent = `${completed} dari ${total} surat (gabungan kelas)`;
   } else {
@@ -4603,7 +4804,7 @@ function renderDdSiswa(){
    TAHFIDH FUNCTIONS
 ============================== */
 function renderAyatList(){
-  const s = SURAT_JUZ30.find(x => x.nm === document.getElementById('surat').value);
+  const s = ALL_SURAT.find(x => x.nm === document.getElementById('surat').value);
   if(!s) return;
   const m = document.getElementById('ayatMulai');
   const sp = document.getElementById('ayatSampai');
@@ -5841,6 +6042,7 @@ document.addEventListener('firebase-ready', function() {
 let mpaMode = 'cepat';
 let mpaChecked = new Set();
 let mpaArah = 'naba-nas'; // 'naba-nas' = An-Naba'→An-Nas | 'nas-naba' = An-Nas→An-Naba'
+let activeJuzMpa = 30; // Filter juz di mode manual pencapaian
 
 function populateMpaSiswaDropdown(){
   const sel = document.getElementById('mpaSiswa');
@@ -5883,6 +6085,7 @@ function openPencapaian(){
   // Reset state
   mpaMode = 'cepat';
   mpaChecked = new Set();
+  activeJuzMpa = 30;
   switchMpaTab('cepat');
   document.getElementById('mpaExistWarning').style.display = 'none';
   document.getElementById('quickPreview').textContent = 'Pilih surat terakhir yang sudah dihafal untuk melihat preview.';
@@ -5909,6 +6112,7 @@ function switchMpaTab(mode){
   document.getElementById('mpaTabManual').classList.toggle('on', mode==='manual');
   document.getElementById('mpaCepatPanel').style.display = mode==='cepat' ? 'block' : 'none';
   document.getElementById('mpaManualPanel').style.display = mode==='manual' ? 'block' : 'none';
+  if(mode === 'manual') renderMpaJuzChips();
   updateMpaCount();
 }
 
@@ -5922,35 +6126,53 @@ function onMpaSiswaChange(){
   document.getElementById('mpaExistWarning').style.display = hasData ? 'block' : 'none';
 }
 
-function buildSuratCheckGrid(){
-  const grid = document.getElementById('suratCheckGrid');
-  grid.innerHTML = SURAT_JUZ30.map((s, i) => `
-    <label class="surat-check-item ${mpaChecked.has(i) ? 'checked' : ''}" id="sci_${i}" onclick="toggleSuratCheck(${i})">
-      <input type="checkbox" ${mpaChecked.has(i) ? 'checked' : ''} onclick="event.stopPropagation();toggleSuratCheck(${i})" id="scb_${i}">
-      <span class="surat-num">${i+1}</span>
-      <span style="flex:1;line-height:1.3;">${s.nm}<br><span style="font-size:var(--fxs);color:var(--mut);font-weight:400;">${s.a} ayat</span></span>
-    </label>
-  `).join('');
+function renderMpaJuzChips(){
+  const container = document.getElementById('mpaJuzChips');
+  if(!container) return;
+  container.innerHTML = '';
+  for(let j = 1; j <= 30; j++){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'fchip' + (activeJuzMpa === j ? ' on' : '');
+    btn.textContent = j === 30 ? 'Juz 30 (Amma)' : `Juz ${j}`;
+    btn.onclick = () => { activeJuzMpa = j; renderMpaJuzChips(); buildSuratCheckGrid(); };
+    container.appendChild(btn);
+  }
 }
 
-function toggleSuratCheck(i){
-  if(mpaChecked.has(i)) mpaChecked.delete(i);
-  else mpaChecked.add(i);
-  const item = document.getElementById('sci_'+i);
-  const cb = document.getElementById('scb_'+i);
-  if(item) item.classList.toggle('checked', mpaChecked.has(i));
-  if(cb) cb.checked = mpaChecked.has(i);
+function buildSuratCheckGrid(){
+  const grid = document.getElementById('suratCheckGrid');
+  const suratList = ALL_SURAT.filter(s => s.juz === activeJuzMpa);
+  grid.innerHTML = suratList.map((s, i) => {
+    const globalIdx = ALL_SURAT.indexOf(s);
+    return `<label class="surat-check-item ${mpaChecked.has(globalIdx) ? 'checked' : ''}" id="sci_${globalIdx}" onclick="toggleSuratCheck(${globalIdx})">
+      <input type="checkbox" ${mpaChecked.has(globalIdx) ? 'checked' : ''} onclick="event.stopPropagation();toggleSuratCheck(${globalIdx})" id="scb_${globalIdx}">
+      <span class="surat-num">${s.n}</span>
+      <span style="flex:1;line-height:1.3;">${s.nm}<br><span style="font-size:var(--fxs);color:var(--mut);font-weight:400;">${s.a} ayat</span></span>
+    </label>`;
+  }).join('');
+}
+
+function toggleSuratCheck(globalIdx){
+  if(mpaChecked.has(globalIdx)) mpaChecked.delete(globalIdx);
+  else mpaChecked.add(globalIdx);
+  const item = document.getElementById('sci_'+globalIdx);
+  const cb = document.getElementById('scb_'+globalIdx);
+  if(item) item.classList.toggle('checked', mpaChecked.has(globalIdx));
+  if(cb) cb.checked = mpaChecked.has(globalIdx);
   updateMpaCount();
 }
 
 function mpaSelectAll(){
-  SURAT_JUZ30.forEach((_,i) => mpaChecked.add(i));
+  const suratList = ALL_SURAT.filter(s => s.juz === activeJuzMpa);
+  suratList.forEach(s => mpaChecked.add(ALL_SURAT.indexOf(s)));
   buildSuratCheckGrid();
   updateMpaCount();
 }
 
 function mpaClearAll(){
-  mpaChecked.clear();
+  const suratList = ALL_SURAT.filter(s => s.juz === activeJuzMpa);
+  suratList.forEach(s => mpaChecked.delete(ALL_SURAT.indexOf(s)));
   buildSuratCheckGrid();
   updateMpaCount();
 }
@@ -6086,15 +6308,20 @@ function getMpaSelectedIndices(){
     if(v === '') return [];
     const idx = parseInt(v);
     if(mpaArah === 'naba-nas'){
-      // 0, 1, 2 ... idx
       return Array.from({length: idx+1}, (_,i) => i);
     } else {
-      // idx, idx+1 ... 36 (An-Nas is last)
       return Array.from({length: SURAT_JUZ30.length - idx}, (_,i) => idx + i);
     }
   } else {
+    // Manual mode: mpaChecked contains global ALL_SURAT indices
     return [...mpaChecked].sort((a,b) => a-b);
   }
+}
+
+// Ambil data surat dari indeks (cepat mode = SURAT_JUZ30 idx, manual mode = ALL_SURAT idx)
+function getMpaSuratByIndex(idx, isManual){
+  if(isManual) return ALL_SURAT[idx];
+  return SURAT_JUZ30[idx];
 }
 
 function getTglFromInput(){
@@ -6115,7 +6342,11 @@ async function simpanPencapaianAwal(){
   const suratSudahAda = new Set(
     dataSetoran.filter(s => s.nama === nama).map(s => s.surat)
   );
-  const toInsert = indices.filter(i => !suratSudahAda.has(SURAT_JUZ30[i].nm));
+  const isManualMode = mpaMode === 'manual';
+  const toInsert = indices.filter(i => {
+    const s = isManualMode ? ALL_SURAT[i] : SURAT_JUZ30[i];
+    return s && !suratSudahAda.has(s.nm);
+  });
 
   if(!toInsert.length){
     showToast('Semua surat yang dipilih sudah ada di riwayat siswa ini','warning');
@@ -6140,7 +6371,7 @@ async function simpanPencapaianAwal(){
   }
 
   const newRecords = toInsert.map((i, offset) => {
-    const s = SURAT_JUZ30[i];
+    const s = isManualMode ? ALL_SURAT[i] : SURAT_JUZ30[i];
     let rentang, stat;
     if(mpaMode === 'cepat' && i === partialIdx){
       // Partial surat — record up to specified ayat
@@ -6542,6 +6773,11 @@ function selectCsdItem(value, label) {
 
       <!-- MODE MANUAL -->
       <div id="mpaManualPanel" style="display:none;">
+        <!-- Juz filter chips -->
+        <div style="margin-bottom:8px;">
+          <label class="flbl" style="margin-bottom:4px;">Filter Juz</label>
+          <div id="mpaJuzChips" class="frow" style="flex-wrap:wrap; gap:4px; margin-bottom:0;"></div>
+        </div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
           <label class="flbl" style="margin:0;">Centang surat yang sudah hafal</label>
           <div style="display:flex; gap:6px;">
