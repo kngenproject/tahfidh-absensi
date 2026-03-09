@@ -394,7 +394,7 @@ select, input[type=file] {
   padding:9px 10px; 
   border:1.5px solid var(--brd); 
   border-radius:var(--rs); 
-  font-size:var(--fsm); /* diperkecil dari --flg */
+  font-size:var(--flg);
   color:var(--txt); 
   background:var(--surf2); 
   outline:none; 
@@ -2080,6 +2080,160 @@ span > .fai, div > .fai { vertical-align: middle; }
 
 
 
+
+/* ==============================
+   CUSTOM SISWA DROPDOWN SHEET
+============================== */
+.csd-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(2px);
+  align-items: flex-end;
+  justify-content: center;
+}
+.csd-overlay.show { display: flex; }
+.csd-sheet {
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.18);
+  animation: slideUp .25s ease;
+}
+.csd-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--brd);
+  flex-shrink: 0;
+}
+.csd-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.csd-title {
+  font-weight: 800;
+  font-size: var(--flg);
+  color: var(--g8);
+}
+.csd-close {
+  background: none;
+  border: none;
+  font-size: var(--f2xl);
+  color: var(--mut);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.csd-close:active { background: var(--brd); }
+.csd-search-wrap {
+  position: relative;
+}
+.csd-search {
+  width: 100%;
+  padding: 8px 10px 8px 34px;
+  border: 1.5px solid var(--brd);
+  border-radius: 10px;
+  font-size: var(--fsm);
+  background: var(--surf2);
+  color: var(--txt);
+  outline: none;
+}
+.csd-search:focus { border-color: var(--g5); font-size: var(--fsm); }
+.csd-search-ico {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--fsm);
+  color: var(--mut);
+  pointer-events: none;
+}
+.csd-body {
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.csd-group-label {
+  padding: 8px 16px 4px;
+  font-size: var(--fxs);
+  font-weight: 700;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.csd-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  font-size: var(--fsm);
+  font-weight: 600;
+  color: var(--txt);
+  border-bottom: 1px solid var(--brd);
+  cursor: pointer;
+  gap: 10px;
+  transition: background .1s;
+}
+.csd-item:active { background: var(--g0); }
+.csd-item.selected {
+  background: var(--g1);
+  color: var(--g8);
+}
+.csd-item-num {
+  font-size: var(--fxs);
+  color: var(--mut);
+  min-width: 22px;
+  font-weight: 400;
+}
+.csd-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: var(--fsm);
+  color: var(--mut);
+}
+/* Trigger button — mirip select tapi custom */
+.csd-trigger {
+  width: 100%;
+  padding: 9px 36px 9px 10px;
+  border: 1.5px solid var(--brd);
+  border-radius: var(--rs);
+  font-size: var(--fsm);
+  font-weight: 600;
+  color: var(--txt);
+  background: var(--surf2);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  outline: none;
+}
+.csd-trigger.placeholder { color: var(--mut); font-weight: 400; }
+.csd-trigger-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--mut);
+  font-size: 10px;
+}
+
 </style>
 </head>
 <body>
@@ -2298,7 +2452,11 @@ span > .fai, div > .fai { vertical-align: middle; }
           <!-- Siswa -->
           <div>
             <label class="flbl">Nama Siswa</label>
-            <select id="namaSiswa"><option value="">— Pilih Siswa —</option></select>
+            <button type="button" class="csd-trigger placeholder" id="namaSiswaTrigger" onclick="openCsdSiswa('namaSiswa')">
+            <span id="namaSiswaLabel">— Pilih Siswa —</span>
+            <span class="csd-trigger-arrow">▼</span>
+          </button>
+          <select id="namaSiswa" style="display:none;"></select>
           </div>
           <!-- Surat Juz 30 + Ayat -->
           <div class="g3 mt8">
@@ -6021,6 +6179,140 @@ window.hapusSiswa = async function(fbId){
   }
 };
 
+
+/* ==============================
+   CUSTOM SISWA DROPDOWN — JS
+============================== */
+let _csdTargetId = null;     // 'namaSiswa' | 'mpaSiswa'
+let _csdItems = [];          // [{value, label, group}]
+
+function openCsdSiswa(targetId) {
+  _csdTargetId = targetId;
+  // Ambil data dari <select> tersembunyi
+  const sel = document.getElementById(targetId);
+  _csdItems = [];
+  for (const child of sel.children) {
+    if (child.tagName === 'OPTGROUP') {
+      for (const opt of child.children) {
+        if (opt.value) _csdItems.push({ value: opt.value, label: opt.text, group: child.label });
+      }
+    } else if (child.value) {
+      _csdItems.push({ value: child.value, label: child.text, group: null });
+    }
+  }
+  document.getElementById('csdSearch').value = '';
+  renderCsdItems('');
+  document.getElementById('csdOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('csdSearch').focus(), 150);
+}
+
+function closeCsdSiswa() {
+  document.getElementById('csdOverlay').classList.remove('show');
+  _csdTargetId = null;
+}
+
+function closeCsdSiswaOutside(e) {
+  if (e.target === document.getElementById('csdOverlay')) closeCsdSiswa();
+}
+
+function filterCsdItems() {
+  const q = document.getElementById('csdSearch').value;
+  renderCsdItems(q);
+}
+
+function renderCsdItems(query) {
+  const q = query.trim().toLowerCase();
+  const currentVal = _csdTargetId ? document.getElementById(_csdTargetId).value : '';
+  const filtered = q
+    ? _csdItems.filter(it => it.label.toLowerCase().includes(q))
+    : _csdItems;
+
+  const body = document.getElementById('csdBody');
+  if (!filtered.length) {
+    body.innerHTML = '<div class="csd-empty">Tidak ada siswa ditemukan</div>';
+    return;
+  }
+
+  // Kelompokkan jika ada group
+  const hasGroup = filtered.some(it => it.group);
+  let html = '';
+  if (hasGroup) {
+    const groups = {};
+    filtered.forEach(it => {
+      const g = it.group || 'Lainnya';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(it);
+    });
+    Object.keys(groups).sort().forEach(g => {
+      html += `<div class="csd-group-label">${g}</div>`;
+      groups[g].forEach((it, idx) => {
+        const sel = it.value === currentVal ? ' selected' : '';
+        html += `<div class="csd-item${sel}" onclick="selectCsdItem(${JSON.stringify(it.value)}, ${JSON.stringify(it.label)})">
+          <span class="csd-item-num">${idx+1}.</span>
+          <span style="flex:1;">${it.label}</span>
+          ${sel ? '<span style="color:var(--g6);font-size:var(--fxl);">✓</span>' : ''}
+        </div>`;
+      });
+    });
+  } else {
+    filtered.forEach((it, idx) => {
+      const sel = it.value === currentVal ? ' selected' : '';
+      html += `<div class="csd-item${sel}" onclick="selectCsdItem(${JSON.stringify(it.value)}, ${JSON.stringify(it.label)})">
+        <span class="csd-item-num">${idx+1}.</span>
+        <span style="flex:1;">${it.label}</span>
+        ${sel ? '<span style="color:var(--g6);font-size:var(--fxl);">✓</span>' : ''}
+      </div>`;
+    });
+  }
+  body.innerHTML = html;
+}
+
+function selectCsdItem(value, label) {
+  if (!_csdTargetId) return;
+  // Set value di hidden select
+  const sel = document.getElementById(_csdTargetId);
+  sel.value = value;
+  // Update trigger button
+  const triggerId = _csdTargetId + 'Trigger';
+  const labelId   = _csdTargetId + 'Label';
+  const trigger = document.getElementById(triggerId);
+  const labelEl = document.getElementById(labelId);
+  // Ambil nama saja (tanpa nomor "1. ")
+  const cleanLabel = label.replace(/^\d+\.\s*/, '');
+  if (labelEl) labelEl.textContent = cleanLabel;
+  if (trigger) trigger.classList.remove('placeholder');
+  // Trigger onchange
+  sel.dispatchEvent(new Event('change'));
+  closeCsdSiswa();
+}
+
+/* Patch populateMpaSiswaDropdown & renderDdSiswa untuk sync trigger label */
+const _origPopulateMpa = populateMpaSiswaDropdown;
+function populateMpaSiswaDropdown() {
+  _origPopulateMpa();
+  // Reset trigger
+  const trigger = document.getElementById('mpaSiswaTrigger');
+  const labelEl = document.getElementById('mpaSiswaLabel');
+  if (labelEl) labelEl.textContent = '— Pilih Siswa —';
+  if (trigger) trigger.classList.add('placeholder');
+}
+
+/* Reset trigger namaSiswa saat renderDdSiswa dipanggil */
+const _origRenderDdSiswa = renderDdSiswa;
+function renderDdSiswa() {
+  _origRenderDdSiswa();
+  const trigger = document.getElementById('namaSiswaTrigger');
+  const labelEl = document.getElementById('namaSiswaLabel');
+  if (!trigger || !labelEl) return;
+  const sel = document.getElementById('namaSiswa');
+  if (sel && sel.value) {
+    labelEl.textContent = sel.options[sel.selectedIndex]?.text?.replace(/^\d+\.\s*/,'') || sel.value;
+    trigger.classList.remove('placeholder');
+  } else {
+    labelEl.textContent = '— Pilih Siswa —';
+    trigger.classList.add('placeholder');
+  }
+}
 </script>
 
 <!-- Modal Pencapaian Awal -->
@@ -6050,9 +6342,11 @@ window.hapusSiswa = async function(fbId){
       <!-- Pilih Siswa -->
       <div style="margin-bottom:12px;">
         <label class="flbl">Pilih Siswa</label>
-        <select id="mpaSiswa" onchange="onMpaSiswaChange()" style="background-image:none;">
-          <option value="">— Pilih Siswa —</option>
-        </select>
+        <button type="button" class="csd-trigger placeholder" id="mpaSiswaTrigger" onclick="openCsdSiswa('mpaSiswa')">
+          <span id="mpaSiswaLabel">— Pilih Siswa —</span>
+          <span class="csd-trigger-arrow">▼</span>
+        </button>
+        <select id="mpaSiswa" onchange="onMpaSiswaChange()" style="display:none;"></select>
       </div>
 
       <!-- Peringatan jika siswa sudah punya data awal -->
@@ -6262,5 +6556,23 @@ window.hapusSiswa = async function(fbId){
     <div id="detailSetoranTabel" style="flex:1;overflow-y:auto;"></div>
   </div>
 </div>
+
+<!-- ════════ CUSTOM SISWA DROPDOWN SHEET ════════ -->
+<div class="csd-overlay" id="csdOverlay" onclick="closeCsdSiswaOutside(event)">
+  <div class="csd-sheet" onclick="event.stopPropagation()">
+    <div class="csd-header">
+      <div class="csd-title-row">
+        <span class="csd-title">📋 Pilih Siswa</span>
+        <button class="csd-close" onclick="closeCsdSiswa()">×</button>
+      </div>
+      <div class="csd-search-wrap">
+        <span class="csd-search-ico">🔍</span>
+        <input type="text" class="csd-search" id="csdSearch" placeholder="Cari nama siswa..." oninput="filterCsdItems()" autocomplete="off">
+      </div>
+    </div>
+    <div class="csd-body" id="csdBody"></div>
+  </div>
+</div>
+
 </body>
 </html>
