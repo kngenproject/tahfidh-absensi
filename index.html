@@ -2629,7 +2629,7 @@ span > .fai, div > .fai { vertical-align: middle; }
         </div>
         <div class="progress-info">
           <div class="progress-title">Progress Juz 30</div>
-          <div class="progress-sub" id="progressSub">0 dari 37 surat selesai</div>
+          <div class="progress-sub" id="progressSub">Belum ada setoran</div>
           <div class="surat-progress">
             <div class="surat-bar"><div class="surat-fill" id="suratFill" style="width:0%"></div></div>
             <span class="surat-text" id="suratText">0/37</span>
@@ -4188,8 +4188,19 @@ function showSiswaHafalanHistory(nama){
     </div>`;
     return;
   }
-  const suratHafal = new Set(dataSetoran.filter(s => s.nama === nama).map(s => s.surat));
-  const totalHafal = suratHafal.size;
+  const siswaSuratSetoran = dataSetoran.filter(s => s.nama === nama);
+  // Hitung surat khatam: hanya surat yang semua ayatnya sudah disetorkan
+  const suratMaxAyatSiswa = {};
+  siswaSuratSetoran.forEach(s => {
+    if (!s.rentang) return;
+    const parts = s.rentang.split('-');
+    const end = parseInt(parts[1] || parts[0]) || 0;
+    if (!suratMaxAyatSiswa[s.surat] || end > suratMaxAyatSiswa[s.surat]) suratMaxAyatSiswa[s.surat] = end;
+  });
+  const totalHafal = Object.entries(suratMaxAyatSiswa).filter(([nm, maxEnd]) => {
+    const suratObj = ALL_SURAT.find(s => s.nm === nm);
+    return suratObj && maxEnd >= suratObj.a;
+  }).length;
   const terakhir = riwayat[0];
   const tglLabel = (() => {
     const k = _setoranTglKey(terakhir);
@@ -4352,29 +4363,106 @@ function updatePointsDisplay(){
 
 function updateProgressRing(){
   const filtered = getFilteredSetoran();
-  const completedSurat = new Set();
-  filtered.forEach(s=> completedSurat.add(s.surat));
-  // Hitung berdasar juz aktif di form
   const juzList = ALL_SURAT.filter(s => s.juz === activeJuzSetoran);
-  const total = juzList.length;
-  const completed = juzList.filter(s => completedSurat.has(s.nm)).length;
-  const percentage = total > 0 ? Math.round((completed/total)*100) : 0;
+  const totalJuzSurat = juzList.length;
+  const juzNamaSet = new Set(juzList.map(s => s.nm));
+
   const circle = document.getElementById('progressCircle');
-  const radius = 31;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percentage/100) * circumference;
-  circle.style.strokeDashoffset = offset;
-  document.getElementById('progressText').textContent = percentage+'%';
+  const circumference = 2 * Math.PI * 31;
   const juzLabel = activeJuzSetoran === 30 ? 'Juz Amma' : `Juz ${activeJuzSetoran}`;
   const titleEl = document.querySelector('.progress-title');
-  if(titleEl) titleEl.textContent = `Progress ${juzLabel}`;
-  if(activeDashboardSiswa === 'SEMUA'){
-    document.getElementById('progressSub').textContent = `${completed} dari ${total} surat (gabungan kelas)`;
-  } else {
-    document.getElementById('progressSub').textContent = `${completed} dari ${total} surat selesai`;
+  if (titleEl) titleEl.textContent = `Progress ${juzLabel}`;
+  const subEl = document.getElementById('progressSub');
+  const barEl = document.getElementById('suratFill');
+  const txtEl = document.getElementById('suratText');
+
+  // Helper: parse max ayat dari rentang setoran (per surat, hanya Juz aktif)
+  function buildMaxAyat(setoranArr) {
+    const map = {};
+    setoranArr.forEach(s => {
+      if (!s.rentang || !juzNamaSet.has(s.surat)) return;
+      const parts = s.rentang.split('-');
+      const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+      if (!map[s.surat] || end > map[s.surat]) map[s.surat] = end;
+    });
+    return map;
   }
-  document.getElementById('suratFill').style.width = percentage+'%';
-  document.getElementById('suratText').textContent = `${completed}/${total}`;
+
+  function setRing(pct, sub, txt) {
+    const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+    circle.style.strokeDashoffset = offset;
+    document.getElementById('progressText').textContent = Math.round(pct) + '%';
+    barEl.style.width = Math.min(pct, 100) + '%';
+    subEl.textContent = sub;
+    txtEl.textContent = txt;
+  }
+
+  // ── Mode SEMUA: agregat kelas — berapa surat sudah dijangkau minimal 1 siswa ──
+  if (activeDashboardSiswa === 'SEMUA') {
+    const covered = new Set(filtered.filter(s => juzNamaSet.has(s.surat)).map(s => s.surat));
+    const pct = totalJuzSurat > 0 ? (covered.size / totalJuzSurat) * 100 : 0;
+    setRing(pct, `${covered.size} dari ${totalJuzSurat} surat sudah disetorkan`, `${covered.size}/${totalJuzSurat}`);
+    return;
+  }
+
+  // ── Mode siswa tunggal ──
+  const info = getSiswaTahfidhInfo(activeDashboardSiswa);
+
+  // Tasmi': sudah khatam & disema', setoran sekarang di luar Juz Amma
+  if (info.ket === "Tasmi'") {
+    setRing(100, `🎤 Tasmi' — lanjut surat luar Juz Amma`, `${totalJuzSurat}/${totalJuzSurat}`);
+    return;
+  }
+
+  // Muroja'ah: sudah khatam, ring 100%, sub tampilkan posisi cycle muroja'ah
+  if (info.ket === "Muroja'ah") {
+    const maxAyatM = buildMaxAyat(filtered);
+    // Frontier maju = surat Juz Amma dengan indeks tertinggi yang disetorkan
+    let mFrontierIdx = -1;
+    juzList.forEach((s, i) => { if (maxAyatM[s.nm]) mFrontierIdx = i; });
+    let sub;
+    if (mFrontierIdx >= 0) {
+      const fs = juzList[mFrontierIdx];
+      const reached = Math.min(maxAyatM[fs.nm], fs.a);
+      const ayatLabel = reached >= fs.a ? `khatam (${fs.a} ayat)` : `ayat ${reached}/${fs.a}`;
+      sub = `🔁 → ${fs.nm} • ${ayatLabel}`;
+    } else {
+      sub = `🔁 Muroja'ah`;
+    }
+    setRing(100, sub, `${totalJuzSurat}/${totalJuzSurat}`);
+    return;
+  }
+
+  // Belum Khatam / belum ada ket: mundur (An-Nas → An-Naba'), frontier = surat terendah
+  const totalAyatJuz = juzList.reduce((sum, s) => sum + s.a, 0);
+  const maxAyat = buildMaxAyat(filtered);
+  const setoranIndices = juzList.map((s, i) => maxAyat[s.nm] ? i : -1).filter(i => i >= 0);
+
+  if (setoranIndices.length === 0) {
+    setRing(0, 'Belum ada setoran', `0/${totalJuzSurat}`);
+    return;
+  }
+
+  const fIdx = Math.min(...setoranIndices);
+  let linearAyat = 0;
+  let khatamCount = 0;
+
+  // Surat setelah frontier (arah An-Nas) — hitung kalau khatam penuh
+  for (let i = fIdx + 1; i < juzList.length; i++) {
+    const s = juzList[i];
+    if ((maxAyat[s.nm] || 0) >= s.a) { linearAyat += s.a; khatamCount++; }
+  }
+  // Surat frontier sendiri — hitung ayat yang sudah dicapai
+  const fs = juzList[fIdx];
+  const frontierAyat = Math.min(maxAyat[fs.nm] || 0, fs.a);
+  linearAyat += frontierAyat;
+  if (frontierAyat >= fs.a) khatamCount++;
+
+  const pct = totalAyatJuz > 0 ? (linearAyat / totalAyatJuz) * 100 : 0;
+  const ayatLabel = frontierAyat >= fs.a
+    ? `khatam (${fs.a} ayat)`
+    : `ayat ${frontierAyat}/${fs.a}`;
+  setRing(pct, `← ${fs.nm} • ${ayatLabel}`, `${khatamCount}/${totalJuzSurat}`);
 }
 
 function renderHeatmap(){
@@ -4485,10 +4573,27 @@ const BADGES = [
     return count >= 10;
   }},
   {id:'khatam_1', icon:'🎓', name:'Khatam Pertama', desc:'Selesai Juz 30 pertama', condition:()=>{
-    const completed = new Set(dataSetoran.map(s=>s.surat));
-    return completed.size >= 37;
+    // Surat dihitung khatam hanya jika semua ayatnya sudah disetorkan (tidak cukup nama suratnya ada)
+    const juz30 = ALL_SURAT.filter(s => s.juz === 30);
+    const suratMaxAyat = {};
+    dataSetoran.forEach(s => {
+      if (!s.rentang) return;
+      const parts = s.rentang.split('-');
+      const end = parseInt(parts[1] || parts[0]) || 0;
+      if (!suratMaxAyat[s.surat] || end > suratMaxAyat[s.surat]) suratMaxAyat[s.surat] = end;
+    });
+    return juz30.every(s => (suratMaxAyat[s.nm] || 0) >= s.a);
   }},
-  {id:'khatam_pro', icon:'🏆', name:'Hafiz Pro', desc:'Khatam 3x', condition:()=> dataSetoran.length >= 111},
+  {id:'khatam_pro', icon:'🏆', name:'Hafiz Pro', desc:'Khatam 3x', condition:()=>{
+    // Ambil jumlahKhatam tertinggi dari record Muroja'ah manapun
+    let maxKhatam = 0;
+    dataSetoran.forEach(s => {
+      if ((s.tambahan || s.ket || '').replace('-','').trim() === "Muroja'ah" && s.jumlahKhatam) {
+        if (s.jumlahKhatam > maxKhatam) maxKhatam = s.jumlahKhatam;
+      }
+    });
+    return maxKhatam >= 3;
+  }},
   {id:'early_bird', icon:'🌅', name:'Early Bird', desc:'Setoran sebelum jam 8 pagi', condition:()=>false},
   {id:'night_owl', icon:'🦉', name:'Night Owl', desc:'Setoran malam hari', condition:()=>false}
 ];
