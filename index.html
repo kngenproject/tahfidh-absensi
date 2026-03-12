@@ -5092,7 +5092,15 @@ function updateStatsPage() {
   ds.forEach(s => sc[s.surat] = (sc[s.surat]||0) + 1);
   const fav = Object.entries(sc).sort((a,b) => b[1]-a[1])[0];
   document.getElementById('statFavSurat').textContent = fav ? fav[0] : '-';
-  document.getElementById('statKhatam').textContent = Math.floor(ds.length / 37) + 'x';
+  // Khatam Count: hanya siswa dengan ket Muroja'ah atau Tasmi' yang dihitung khatam.
+  // Belum Khatam — walaupun setoran sudah sampai An-Naba' — tidak dihitung.
+  let totalKhatam = 0;
+  siswaDiKelas.forEach(nama => {
+    const info = getSiswaTahfidhInfo(nama);
+    if (info.ket === "Tasmi'") totalKhatam += 1;
+    else if (info.ket === "Muroja'ah") totalKhatam += (info.jumlahKhatam || 1);
+  });
+  document.getElementById('statKhatam').textContent = totalKhatam + 'x';
   ST.rerender();
 }
 
