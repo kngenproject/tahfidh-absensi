@@ -2518,9 +2518,14 @@ span > .fai, div > .fai { vertical-align: middle; }
 }
 /* Hapus outline default yang jelek di semua browser */
 :focus:not(:focus-visible) { outline: none; }
+
+/* ── Login Screen ── */
+
 </style>
 </head>
 <body>
+
+
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="fai_home" viewBox="0 0 576 512"><path d="M575.8 255.5c0 18-15 32.1-32 32.1h-32l.7 160.2c0 2.7-.2 5.4-.5 8.1V472c0 22.1-17.9 40-40 40H456c-1.1 0-2.2 0-3.3-.1c-1.4 .1-2.8 .1-4.2 .1H416 392c-22.1 0-40-17.9-40-40V448 384c0-17.7-14.3-32-32-32H256c-17.7 0-32 14.3-32 32v64 24c0 22.1-17.9 40-40 40H160 128.1c-1.4 0-2.8 0-4.2-.1c-1.1 .1-2.2 .1-3.3 .1H96c-22.1 0-40-17.9-40-40V360c0-.9 0-1.9 .1-2.8V287.6H32c-18 0-32-14-32-32.1c0-9 3-17 10-24L266.4 8c7-7 15-8 22-8s15 2 21 7L564.8 231.5c8 7 12 15 11 24z"/></symbol>
   <symbol id="fai_book_open" viewBox="0 0 576 512"><path d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z"/></symbol>
@@ -3335,14 +3340,14 @@ let activeKelasAbsen      = 'SEMUA';
 let activeKelasViewer     = 'SEMUA';
 let activeKelasMpa        = 'SEMUA';
 
-// ─── Auto-start app tanpa login ────────────────────────────────
-(async function initApp(){
+// ─── Kredensial admin (hardcode) ───────────────────────────────
+
+async function startApp() {
   try {
     await loadConfig();
-    await setupRealtimeListeners(); // tunggu fetch selesai dulu
+    await setupRealtimeListeners();
   } catch(e) {
     console.warn('[FB] Init error:', e);
-    // fallback: load dari localStorage
     masterSiswa  = JSON.parse(localStorage.getItem('db_master_siswa')||'[]');
     dataSetoran  = JSON.parse(localStorage.getItem('db_setoran')||'[]');
     dataAbsensi  = JSON.parse(localStorage.getItem('db_absensi_harian')||'[]');
@@ -3350,7 +3355,10 @@ let activeKelasMpa        = 'SEMUA';
     userStreaks   = JSON.parse(localStorage.getItem('db_streaks')||'{}');
   }
   initAppUI();
-})();
+}
+
+// Auto-start app tanpa login
+startApp();
 
 
 
@@ -3377,9 +3385,8 @@ let activeKelasMpa        = 'SEMUA';
 
 
 
-function signOutApp(){ showToast("Tidak ada sesi untuk diakhiri", "info"); }
-function simpanUsername(){ showToast('Fitur ini tidak tersedia dalam mode tanpa login', 'info'); }
-function simpanPassword(){ showToast('Fitur ini tidak tersedia dalam mode tanpa login', 'info'); }
+function simpanUsername(){ showToast('Fitur username tidak tersedia', 'info'); }
+function simpanPassword(){ showToast('Fitur password tidak tersedia', 'info'); }
 function submitInviteCode(){ showToast('Tidak diperlukan kode undangan', 'info'); }
 // Fetch data dari Firestore (sekali saat load, bukan realtime)
 async function setupRealtimeListeners(){
@@ -4145,18 +4152,6 @@ function getSiswaJuzProgress(nama, ket) {
   const totalAyat  = juzList.reduce((s, x) => s + x.a, 0);
   const juzNamaSet = new Set(juzList.map(s => s.nm));
 
-  // Parse max ayat per surat dari setoran Juz Amma milik siswa ini
-  function buildMax(setoranArr) {
-    const map = {};
-    setoranArr.forEach(s => {
-      if (!s.rentang || !juzNamaSet.has(s.surat)) return;
-      const parts = s.rentang.split('-');
-      const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
-      if (!map[s.surat] || end > map[s.surat]) map[s.surat] = end;
-    });
-    return map;
-  }
-
   const setoranSiswa = dataSetoran.filter(s => s.nama === nama);
 
   // Tasmi': khatam penuh
@@ -4165,20 +4160,32 @@ function getSiswaJuzProgress(nama, ket) {
              khatamCount: totalSurat, totalSurat, isTasmi: true };
   }
 
-  const maxAyat = buildMax(setoranSiswa);
+  // Untuk setiap surat: track max ayat (untuk posisi frontier)
+  // dan apakah ada setoran ayat penuh + stat L (untuk dihitung khatam)
+  const suratMaxAyat = {};  // max end-ayat dari semua setoran
+  const suratKhatamL = {};  // true jika pernah setoran penuh & L
 
-  // Muroja'ah: ring 100%, tapi cari frontier muroja'ah (surat tertinggi di Juz Amma)
+  setoranSiswa.forEach(s => {
+    if (!s.rentang || !juzNamaSet.has(s.surat)) return;
+    const parts = s.rentang.split('-');
+    const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+    if (!suratMaxAyat[s.surat] || end > suratMaxAyat[s.surat]) suratMaxAyat[s.surat] = end;
+    const suratObj = juzList.find(x => x.nm === s.surat);
+    if (suratObj && end >= suratObj.a && s.stat === 'L') suratKhatamL[s.surat] = true;
+  });
+
+  // Muroja'ah: ring 100%, tampilkan posisi frontier muroja'ah
   if (ket === "Muroja'ah") {
     let mFIdx = -1;
-    juzList.forEach((s, i) => { if (maxAyat[s.nm]) mFIdx = i; });
+    juzList.forEach((s, i) => { if (suratMaxAyat[s.nm]) mFIdx = i; });
     const fs = mFIdx >= 0 ? juzList[mFIdx] : null;
-    const reached = fs ? Math.min(maxAyat[fs.nm], fs.a) : 0;
+    const reached = fs ? Math.min(suratMaxAyat[fs.nm], fs.a) : 0;
     return { pct: 100, frontierNm: fs?.nm || null, frontierAyat: reached,
              frontierTotal: fs?.a || 0, khatamCount: totalSurat, totalSurat, isMuroja: true };
   }
 
   // Belum Khatam / belum ada ket: arah mundur (nas→naba), frontier = indeks terendah
-  const setoranIndices = juzList.map((s, i) => maxAyat[s.nm] ? i : -1).filter(i => i >= 0);
+  const setoranIndices = juzList.map((s, i) => suratMaxAyat[s.nm] ? i : -1).filter(i => i >= 0);
   if (setoranIndices.length === 0) {
     return { pct: 0, frontierNm: null, frontierAyat: 0, frontierTotal: 0,
              khatamCount: 0, totalSurat };
@@ -4188,18 +4195,18 @@ function getSiswaJuzProgress(nama, ket) {
   const fs   = juzList[fIdx];
   let linearAyat = 0, khatamCount = 0;
 
-  // Surat setelah frontier (sudah dihafalkan lebih dulu, arah An-Nas)
+  // Surat di belakang frontier (arah An-Nas): khatam hanya kalau pernah L + ayat penuh
   for (let i = fIdx + 1; i < juzList.length; i++) {
     const s = juzList[i];
-    if ((maxAyat[s.nm] || 0) >= s.a) { linearAyat += s.a; khatamCount++; }
+    if (suratKhatamL[s.nm]) { linearAyat += s.a; khatamCount++; }
   }
-  // Surat frontier itu sendiri
-  const frontierAyat = Math.min(maxAyat[fs.nm] || 0, fs.a);
+  // Surat frontier: posisi ayat dari max yang dicapai, khatam hanya kalau suratKhatamL
+  const frontierAyat = Math.min(suratMaxAyat[fs.nm] || 0, fs.a);
   linearAyat += frontierAyat;
-  if (frontierAyat >= fs.a) khatamCount++;
+  if (suratKhatamL[fs.nm]) khatamCount++;
 
-  // Gunakan Math.floor — hanya tampilkan 100% kalau memang semua ayat selesai
-  const pct = linearAyat >= totalAyat ? 100 : Math.floor((linearAyat / totalAyat) * 100);
+  // Belum khatam → max 99%, 100% hanya untuk Muroja'ah & Tasmi'
+  const pct = Math.min(Math.floor((linearAyat / totalAyat) * 100), 99);
   return { pct, frontierNm: fs.nm, frontierAyat, frontierTotal: fs.a, khatamCount, totalSurat };
 }
 
