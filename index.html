@@ -69,7 +69,7 @@ body {
   --r:12px; --rs:8px;
   --sh:0 2px 8px rgba(12,74,42,.08);
   --HDR:50px;
-  --NAV:56px;
+  --NAV:50px;
 
   /* ── Skala Tipografi Terpadu ── */
   /* xs  = label kecil, badge, caption  */
@@ -1686,7 +1686,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
 }
 @media (max-width: 380px) {
   :root {
-    --HDR: 48px; --NAV: 54px;
+    --HDR: 48px; --NAV: 48px;
     --fxs: 0.68rem;
     --fsm: 0.75rem;
     --fmd: 0.82rem;
@@ -1708,7 +1708,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   html { font-size: clamp(14px, 2vw, 16px); }
   :root {
     --HDR: 60px;
-    --NAV: 66px;
+    --NAV: 60px;
     --fxs: 0.72rem;
     --fsm: 0.80rem;
     --fmd: 0.88rem;
@@ -1743,7 +1743,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
 }
 @media (min-width: 1024px) {
   html { font-size: 16px; }
-  :root { --HDR: 65px; --NAV: 62px; }
+  :root { --HDR: 65px; --NAV: 65px; }
   .pg { padding: 20px 25px 24px; max-width: 860px; }
   .s4 { grid-template-columns: repeat(4, 1fr) !important; gap: 15px; }
   .quick-actions { grid-template-columns: repeat(4, 1fr) !important; gap: 15px; }
@@ -3879,8 +3879,8 @@ pgw.addEventListener('touchend',e=>{
 
 (function(){
   const d=new Date();
-  const days=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-  const mon=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const mon=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   document.getElementById('tglHdr').textContent=`${days[d.getDay()]}, ${d.getDate()} ${mon[d.getMonth()]} ${d.getFullYear()}`;
 })();
 
@@ -4115,7 +4115,7 @@ function showSiswaHafalanHistory(nama){
     const yestKey = _localDateKey(new Date(Date.now()-86400000));
     if(k === todayKey) return '• Hari ini';
     if(k === yestKey) return '• Kemarin';
-    return '• ' + d.toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+    return '• ' + d.toLocaleDateString('id-ID',{day:'numeric',month:'long'});
   })();
   panel.style.display = 'block';
   panel.innerHTML = `
@@ -4136,7 +4136,7 @@ function showSiswaHafalanHistory(nama){
       <div style="margin-top:6px; display:flex; flex-direction:column; gap:5px;">
         ${riwayat.slice(1).map(r => {
           const k = _setoranTglKey(r);
-          const d = k&&k!=='0000-00-00' ? new Date(k+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'}) : '';
+          const d = k&&k!=='0000-00-00' ? new Date(k+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long'}) : '';
           return `<div style="display:flex; align-items:center; gap:8px; padding:5px 8px; background:#fff; border-radius:6px; border:1px solid var(--brd);">
             <div style="flex:1; min-width:0;">
               <span style="font-weight:600; font-size:var(--fsm);">${r.surat}</span>
@@ -4373,7 +4373,7 @@ function renderRecentActivity(){
       const yestKey = _localDateKey(new Date(Date.now()-86400000));
       if(tglKey === todayKey) tglLabel = 'Hari ini';
       else if(tglKey === yestKey) tglLabel = 'Kemarin';
-      else tglLabel = d.toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+      else tglLabel = d.toLocaleDateString('id-ID',{day:'numeric',month:'long'});
     }
     return `<div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--brd);">
       <div style="width:40px; height:40px; border-radius:50%; background:var(--g1); display:flex; align-items:center; justify-content:center; font-size:var(--fxl); flex-shrink:0;">📖</div>
@@ -4472,8 +4472,8 @@ const ST = (() => {
     const labels = [], lancar = [], kl = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
-      const ds = d.toLocaleDateString('id-ID');
-      labels.push(d.toLocaleDateString('id-ID', { weekday:'short' }));
+      const ds = _localDateKey(d);
+      labels.push(d.toLocaleDateString('id-ID', { weekday:'long' }));
       const day = dataSetoran.filter(s => s.tgl === ds);
       lancar.push(day.filter(s => s.stat === 'L').length);
       kl.push(day.filter(s => s.stat === 'KL').length);
@@ -5315,9 +5315,13 @@ function checkAchievements(nama){
 
 // Konversi record setoran ke string tanggal YYYY-MM-DD
 function _setoranTglKey(i){
+  // Format standar YYYY-MM-DD — langsung pakai
   if(i.tgl && /^\d{4}-\d{2}-\d{2}$/.test(i.tgl)) return i.tgl;
-  if(i.tgl){ try{ const d=new Date(i.tgl); if(!isNaN(d)) return _localDateKey(d); }catch(e){} }
-  if(i.inputAt){ const d=i.inputAt.toDate?i.inputAt.toDate():new Date(i.inputAt); if(!isNaN(d)) return _localDateKey(d); }
+  // Format lama dari locale ambigu — skip, gunakan inputAt sebagai sumber terpercaya
+  if(i.inputAt){
+    const d = i.inputAt.toDate ? i.inputAt.toDate() : new Date(i.inputAt);
+    if(!isNaN(d)) return _localDateKey(d);
+  }
   return '0000-00-00';
 }
 function _setoranTglLabel(key){
@@ -6125,7 +6129,9 @@ function fmtDate(v){
   if(!v) return '';
   if(typeof v === 'number'){ 
     const d = new Date(Math.round((v-25569)*86400*1000)); 
-    return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; 
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    return `${dd}/${mm}/${d.getFullYear()}`; 
   }
   return v.toString();
 }
