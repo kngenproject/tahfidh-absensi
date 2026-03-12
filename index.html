@@ -1960,9 +1960,7 @@ span > .fai, div > .fai { vertical-align: middle; }
 }
 /* Info badge */
 .info-badge {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  display: block;
   background: #fffbeb;
   border: 1px solid #fde68a;
   border-radius: 8px;
@@ -1970,7 +1968,7 @@ span > .fai, div > .fai { vertical-align: middle; }
   font-size:var(--fsm);
   color: #92400e;
   margin-bottom: 12px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 .mpa-ket-btn {
   display: flex;
@@ -4134,6 +4132,77 @@ const SURAT_JUZ30 = ALL_SURAT.filter(s => s.juz === 30);
 // Juz aktif di form setoran (default 30 = Juz Amma)
 let activeJuzSetoran = 30;
 
+/**
+ * Hitung progress hafalan Juz Amma untuk satu siswa.
+ * Mengembalikan { pct, frontierNm, frontierAyat, frontierTotal, khatamCount, totalSurat }
+ * - Tasmi'   → pct=100, khatamCount=37
+ * - Muroja'ah → pct=100, frontierNm = surat maju terbaru di Juz Amma
+ * - Belum Khatam → frontier = surat terendah (arah nas→naba'), pct dihitung linier
+ */
+function getSiswaJuzProgress(nama, ket) {
+  const juzList = SURAT_JUZ30;   // selalu Juz Amma
+  const totalSurat = juzList.length;
+  const totalAyat  = juzList.reduce((s, x) => s + x.a, 0);
+  const juzNamaSet = new Set(juzList.map(s => s.nm));
+
+  // Parse max ayat per surat dari setoran Juz Amma milik siswa ini
+  function buildMax(setoranArr) {
+    const map = {};
+    setoranArr.forEach(s => {
+      if (!s.rentang || !juzNamaSet.has(s.surat)) return;
+      const parts = s.rentang.split('-');
+      const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+      if (!map[s.surat] || end > map[s.surat]) map[s.surat] = end;
+    });
+    return map;
+  }
+
+  const setoranSiswa = dataSetoran.filter(s => s.nama === nama);
+
+  // Tasmi': khatam penuh
+  if (ket === "Tasmi'") {
+    return { pct: 100, frontierNm: 'An-Nas', frontierAyat: 6, frontierTotal: 6,
+             khatamCount: totalSurat, totalSurat, isTasmi: true };
+  }
+
+  const maxAyat = buildMax(setoranSiswa);
+
+  // Muroja'ah: ring 100%, tapi cari frontier muroja'ah (surat tertinggi di Juz Amma)
+  if (ket === "Muroja'ah") {
+    let mFIdx = -1;
+    juzList.forEach((s, i) => { if (maxAyat[s.nm]) mFIdx = i; });
+    const fs = mFIdx >= 0 ? juzList[mFIdx] : null;
+    const reached = fs ? Math.min(maxAyat[fs.nm], fs.a) : 0;
+    return { pct: 100, frontierNm: fs?.nm || null, frontierAyat: reached,
+             frontierTotal: fs?.a || 0, khatamCount: totalSurat, totalSurat, isMuroja: true };
+  }
+
+  // Belum Khatam / belum ada ket: arah mundur (nas→naba), frontier = indeks terendah
+  const setoranIndices = juzList.map((s, i) => maxAyat[s.nm] ? i : -1).filter(i => i >= 0);
+  if (setoranIndices.length === 0) {
+    return { pct: 0, frontierNm: null, frontierAyat: 0, frontierTotal: 0,
+             khatamCount: 0, totalSurat };
+  }
+
+  const fIdx = Math.min(...setoranIndices);
+  const fs   = juzList[fIdx];
+  let linearAyat = 0, khatamCount = 0;
+
+  // Surat setelah frontier (sudah dihafalkan lebih dulu, arah An-Nas)
+  for (let i = fIdx + 1; i < juzList.length; i++) {
+    const s = juzList[i];
+    if ((maxAyat[s.nm] || 0) >= s.a) { linearAyat += s.a; khatamCount++; }
+  }
+  // Surat frontier itu sendiri
+  const frontierAyat = Math.min(maxAyat[fs.nm] || 0, fs.a);
+  linearAyat += frontierAyat;
+  if (frontierAyat >= fs.a) khatamCount++;
+
+  // Gunakan Math.floor — hanya tampilkan 100% kalau memang semua ayat selesai
+  const pct = linearAyat >= totalAyat ? 100 : Math.floor((linearAyat / totalAyat) * 100);
+  return { pct, frontierNm: fs.nm, frontierAyat, frontierTotal: fs.a, khatamCount, totalSurat };
+}
+
 // Isi select surat berdasar juz aktif
 function buildSuratDropdown(){
   const sel = document.getElementById('surat');
@@ -4363,8 +4432,8 @@ function updatePointsDisplay(){
 
 function updateProgressRing(){
   const filtered = getFilteredSetoran();
-  const juzList = ALL_SURAT.filter(s => s.juz === activeJuzSetoran);
-  const totalJuzSurat = juzList.length;
+  const juzList   = ALL_SURAT.filter(s => s.juz === activeJuzSetoran);
+  const totalSurat = juzList.length;
   const juzNamaSet = new Set(juzList.map(s => s.nm));
 
   const circle = document.getElementById('progressCircle');
@@ -4376,93 +4445,55 @@ function updateProgressRing(){
   const barEl = document.getElementById('suratFill');
   const txtEl = document.getElementById('suratText');
 
-  // Helper: parse max ayat dari rentang setoran (per surat, hanya Juz aktif)
-  function buildMaxAyat(setoranArr) {
-    const map = {};
-    setoranArr.forEach(s => {
-      if (!s.rentang || !juzNamaSet.has(s.surat)) return;
-      const parts = s.rentang.split('-');
-      const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
-      if (!map[s.surat] || end > map[s.surat]) map[s.surat] = end;
-    });
-    return map;
-  }
-
-  function setRing(pct, sub, txt) {
-    const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
-    circle.style.strokeDashoffset = offset;
-    document.getElementById('progressText').textContent = Math.round(pct) + '%';
-    barEl.style.width = Math.min(pct, 100) + '%';
+  function applyRing(pct, sub, txt) {
+    const safePct = Math.max(0, Math.min(100, pct));
+    circle.style.strokeDashoffset = circumference - (safePct / 100) * circumference;
+    document.getElementById('progressText').textContent = safePct + '%';
+    barEl.style.width = safePct + '%';
     subEl.textContent = sub;
     txtEl.textContent = txt;
   }
 
-  // ── Mode SEMUA: agregat kelas — berapa surat sudah dijangkau minimal 1 siswa ──
+  // ── Mode SEMUA: agregat — berapa surat sudah disentuh minimal 1 siswa ──
   if (activeDashboardSiswa === 'SEMUA') {
     const covered = new Set(filtered.filter(s => juzNamaSet.has(s.surat)).map(s => s.surat));
-    const pct = totalJuzSurat > 0 ? (covered.size / totalJuzSurat) * 100 : 0;
-    setRing(pct, `${covered.size} dari ${totalJuzSurat} surat sudah disetorkan`, `${covered.size}/${totalJuzSurat}`);
+    const pct = totalSurat > 0 ? Math.floor((covered.size / totalSurat) * 100) : 0;
+    applyRing(pct, `${covered.size} dari ${totalSurat} surat sudah disetorkan`, `${covered.size}/${totalSurat}`);
     return;
   }
 
-  // ── Mode siswa tunggal ──
+  // ── Mode siswa tunggal: pakai shared helper ──
   const info = getSiswaTahfidhInfo(activeDashboardSiswa);
+  const prog = getSiswaJuzProgress(activeDashboardSiswa, info.ket);
 
-  // Tasmi': sudah khatam & disema', setoran sekarang di luar Juz Amma
-  if (info.ket === "Tasmi'") {
-    setRing(100, `🎤 Tasmi' — lanjut surat luar Juz Amma`, `${totalJuzSurat}/${totalJuzSurat}`);
+  if (prog.isTasmi) {
+    applyRing(100, `🎤 Tasmi' — lanjut surat luar Juz Amma`, `${prog.totalSurat}/${prog.totalSurat}`);
     return;
   }
 
-  // Muroja'ah: sudah khatam, ring 100%, sub tampilkan posisi cycle muroja'ah
-  if (info.ket === "Muroja'ah") {
-    const maxAyatM = buildMaxAyat(filtered);
-    // Frontier maju = surat Juz Amma dengan indeks tertinggi yang disetorkan
-    let mFrontierIdx = -1;
-    juzList.forEach((s, i) => { if (maxAyatM[s.nm]) mFrontierIdx = i; });
+  if (prog.isMuroja) {
     let sub;
-    if (mFrontierIdx >= 0) {
-      const fs = juzList[mFrontierIdx];
-      const reached = Math.min(maxAyatM[fs.nm], fs.a);
-      const ayatLabel = reached >= fs.a ? `khatam (${fs.a} ayat)` : `ayat ${reached}/${fs.a}`;
-      sub = `🔁 → ${fs.nm} • ${ayatLabel}`;
+    if (prog.frontierNm) {
+      const ayatLabel = prog.frontierAyat >= prog.frontierTotal
+        ? `khatam (${prog.frontierTotal} ayat)`
+        : `ayat ${prog.frontierAyat}/${prog.frontierTotal}`;
+      sub = `🔁 → ${prog.frontierNm} • ${ayatLabel}`;
     } else {
       sub = `🔁 Muroja'ah`;
     }
-    setRing(100, sub, `${totalJuzSurat}/${totalJuzSurat}`);
+    applyRing(100, sub, `${prog.totalSurat}/${prog.totalSurat}`);
     return;
   }
 
-  // Belum Khatam / belum ada ket: mundur (An-Nas → An-Naba'), frontier = surat terendah
-  const totalAyatJuz = juzList.reduce((sum, s) => sum + s.a, 0);
-  const maxAyat = buildMaxAyat(filtered);
-  const setoranIndices = juzList.map((s, i) => maxAyat[s.nm] ? i : -1).filter(i => i >= 0);
-
-  if (setoranIndices.length === 0) {
-    setRing(0, 'Belum ada setoran', `0/${totalJuzSurat}`);
+  // Belum khatam
+  if (!prog.frontierNm) {
+    applyRing(0, 'Belum ada setoran', `0/${prog.totalSurat}`);
     return;
   }
-
-  const fIdx = Math.min(...setoranIndices);
-  let linearAyat = 0;
-  let khatamCount = 0;
-
-  // Surat setelah frontier (arah An-Nas) — hitung kalau khatam penuh
-  for (let i = fIdx + 1; i < juzList.length; i++) {
-    const s = juzList[i];
-    if ((maxAyat[s.nm] || 0) >= s.a) { linearAyat += s.a; khatamCount++; }
-  }
-  // Surat frontier sendiri — hitung ayat yang sudah dicapai
-  const fs = juzList[fIdx];
-  const frontierAyat = Math.min(maxAyat[fs.nm] || 0, fs.a);
-  linearAyat += frontierAyat;
-  if (frontierAyat >= fs.a) khatamCount++;
-
-  const pct = totalAyatJuz > 0 ? (linearAyat / totalAyatJuz) * 100 : 0;
-  const ayatLabel = frontierAyat >= fs.a
-    ? `khatam (${fs.a} ayat)`
-    : `ayat ${frontierAyat}/${fs.a}`;
-  setRing(pct, `← ${fs.nm} • ${ayatLabel}`, `${khatamCount}/${totalJuzSurat}`);
+  const ayatLabel = prog.frontierAyat >= prog.frontierTotal
+    ? `khatam (${prog.frontierTotal} ayat)`
+    : `ayat ${prog.frontierAyat}/${prog.frontierTotal}`;
+  applyRing(prog.pct, `← ${prog.frontierNm} • ${ayatLabel}`, `${prog.khatamCount}/${prog.totalSurat}`);
 }
 
 function renderHeatmap(){
@@ -7507,13 +7538,20 @@ function _renderRekapRows() {
     const kTasmi  = infoList.filter(s => s.ket === "Tasmi'").length;
     totalBelum += kBelum; totalMuroja += kMuroja; totalTasmi += kTasmi;
     const rows = infoList.map((s,i) => {
-      const pct = s.lastSuratNum ? Math.round((s.lastSuratNum / 114) * 100) : 0;
+      const prog = getSiswaJuzProgress(s.nama, s.ket);
+      const pct  = prog.pct;
+      const pctLabel = prog.isTasmi ? '🎤 100%'
+                     : prog.isMuroja ? '🔁 100%'
+                     : pct + '%';
       return `<div class="rekap-row">
         <span class="rekap-no">${i+1}</span>
         <div style="min-width:0;">
           <div class="rekap-nama">${s.nama}</div>
           <div style="font-size:var(--fxs);color:var(--mut);">${s.totalSetoran}x setoran • ${s.jumlahSurat} surat</div>
-          <div class="juz-mini-bar"><div class="juz-mini-fill" style="width:${pct}%;"></div></div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:3px;">
+            <div class="juz-mini-bar" style="flex:1;"><div class="juz-mini-fill" style="width:${pct}%;"></div></div>
+            <span style="font-size:var(--fxs);color:var(--mut);white-space:nowrap;">${pctLabel}</span>
+          </div>
         </div>
         <div style="text-align:right;">
           <div class="rekap-surat">${s.lastSurat||'—'}</div>
