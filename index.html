@@ -1115,42 +1115,69 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   margin-top:3px; 
 }
 .badges-grid { 
-  display:grid; 
-  grid-template-columns: repeat(4, 1fr) !important; 
-  gap:8px; 
-  margin-top:10px; 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px; 
+  margin-top: 10px; 
   width: 100%;
 }
 .badge-item { 
-  background:var(--surf2); 
-  border-radius:var(--rs); 
-  padding:12px 4px; 
-  text-align:center; 
-  cursor:pointer; 
-  border:2px solid transparent; 
+  background: var(--surf2);
+  border-radius: var(--rs); 
+  padding: 12px 8px 10px;
+  text-align: center; 
+  cursor: pointer; 
+  border: 1.5px solid transparent;
   min-width: 0;
+  transition: border-color .15s, box-shadow .15s;
+}
+.badge-item.unlocked {
+  background: #f0faf4;
+  border-color: #a7f3c0;
 }
 .badge-item.locked { 
-  opacity:.4; 
-  filter:grayscale(1); 
+  opacity: .55;
 }
 .badge-icon { 
-  font-size:var(--f3xl); 
-  margin-bottom:4px; 
+  font-size: var(--f2xl);
+  margin-bottom: 5px; 
+  line-height: 1;
 }
 .badge-name { 
-  font-size:var(--fsm); 
-  font-weight:700; 
-  color:var(--txt); 
-  line-height:1.2;
+  font-size: var(--fsm); 
+  font-weight: 700; 
+  color: var(--txt); 
+  line-height: 1.2;
+  margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge-status.ok {
+  font-size: 10px;
+  color: var(--g6);
+  font-weight: 700;
+}
+.badge-prog-bar {
+  height: 5px;
+  background: var(--brd);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 2px 3px;
+}
+.badge-prog-fill {
+  height: 100%;
+  background: #f59e0b;
+  border-radius: 3px;
+  transition: width .3s;
+}
+.badge-prog-label {
+  font-size: 10px;
+  color: var(--mut);
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.badge-desc { 
-  font-size:var(--fsm); 
-  color:var(--mut); 
-  margin-top:2px; 
 }
 .siswa-selector-bar {
   background: var(--surf);
@@ -1740,7 +1767,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   .s4 { grid-template-columns: repeat(4, 1fr) !important; gap: 12px; }
   .s3 { grid-template-columns: repeat(3, 1fr) !important; gap: 12px; }
   .quick-actions { grid-template-columns: repeat(4, 1fr) !important; gap: 12px; }
-  .badges-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 10px; }
+  .badges-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 10px; }
   .heatmap-grid { grid-template-columns: repeat(15, 1fr) !important; gap: 5px; }
   .strow { grid-template-columns: repeat(4, 1fr) !important; gap: 6px; }
   .chart-slot { height: 280px; }
@@ -1765,7 +1792,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   .pg { padding: 20px 25px 24px; max-width: 860px; }
   .s4 { grid-template-columns: repeat(4, 1fr) !important; gap: 15px; }
   .quick-actions { grid-template-columns: repeat(4, 1fr) !important; gap: 15px; }
-  .badges-grid { grid-template-columns: repeat(8, 1fr) !important; }
+  .badges-grid { grid-template-columns: repeat(5, 1fr) !important; }
   .chart-slot { height: 320px; }
   /* Nav label lebih besar di PC */
   .nb { font-size: var(--fmd); gap: 4px; }
@@ -1831,7 +1858,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   .agrid { grid-template-columns: repeat(auto-fill, minmax(clamp(40px, 4.5vw, 54px), 1fr)) !important; }
   .ai    { height: clamp(40px, 4.5vw, 54px); }
   .surat-check-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-  .badges-grid { grid-template-columns: repeat(8, 1fr) !important; gap: 10px; }
+  .badges-grid { grid-template-columns: repeat(5, 1fr) !important; gap: 10px; }
   .sc { padding: 12px 8px; }
   .scn { font-size: var(--f3xl); }
   .scard { padding: 14px 18px; margin-bottom: 10px; }
@@ -1854,7 +1881,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   .chart-slot.tall    { height: 460px; }
   .chart-slot.rekap   { height: 420px; }
 
-  .badges-grid { grid-template-columns: repeat(10, 1fr) !important; }
+  .badges-grid { grid-template-columns: repeat(5, 1fr) !important; }
   .edit-card  { max-width: 560px; }
   .edit-sheet { max-width: 800px; padding: 22px 28px; }
   .mpa-sheet  { max-width: 680px; }
@@ -1877,7 +1904,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   .pg { max-width: 1280px; }
   .chart-slot { height: 380px; }
   .chart-slot.tall { height: 480px; }
-  .badges-grid { grid-template-columns: repeat(12, 1fr) !important; }
+  .badges-grid { grid-template-columns: repeat(5, 1fr) !important; }
 }
 
 /* ==============================
@@ -4783,43 +4810,152 @@ function renderRecentActivity(){
 }
 
 /* ==============================
-   BADGES SYSTEM
+   BADGES SYSTEM — kondisi dihitung berdasar namaFilter aktif
 ============================== */
+
+// Ambil setoran yang di-scope ke namaFilter
+function _badgeSetoran(namaFilter) {
+  if (!namaFilter || !namaFilter.length) return dataSetoran;
+  return dataSetoran.filter(s => namaFilter.includes(s.nama));
+}
+
+// Streak tertinggi di antara namaFilter
+function _badgeMaxStreak(namaFilter) {
+  if (!namaFilter || !namaFilter.length) return Math.max(0, ...Object.values(userStreaks));
+  return Math.max(0, ...namaFilter.map(n => userStreaks[n] || 0));
+}
+
 const BADGES = [
-  {id:'first_step', icon:'👣', name:'Langkah Pertama', desc:'Setoran pertama kali', condition:()=>dataSetoran.length >= 1},
-  {id:'week_warrior', icon:'🔥', name:'Pemula Rajin', desc:'7 hari streak', condition:()=>Object.values(userStreaks).some(s=>s>=7)},
-  {id:'month_master', icon:'🌙', name:'Bulan Penuh', desc:'30 hari streak', condition:()=>Object.values(userStreaks).some(s=>s>=30)},
-  {id:'perfect_l', icon:'💯', name:'Sempurna', desc:'10x Lancar berturut-turut', condition:()=>{
-    let count = 0;
-    for(let i=0; i<Math.min(dataSetoran.length, 10); i++){
-      if(dataSetoran[i].stat === 'L') count++;
-    }
-    return count >= 10;
-  }},
-  {id:'khatam_1', icon:'🎓', name:'Khatam Pertama', desc:'Selesai Juz 30 pertama', condition:()=>{
-    // Surat dihitung khatam hanya jika semua ayatnya sudah disetorkan (tidak cukup nama suratnya ada)
-    const juz30 = ALL_SURAT.filter(s => s.juz === 30);
-    const suratMaxAyat = {};
-    dataSetoran.forEach(s => {
-      if (!s.rentang) return;
-      const parts = s.rentang.split('-');
-      const end = parseInt(parts[1] || parts[0]) || 0;
-      if (!suratMaxAyat[s.surat] || end > suratMaxAyat[s.surat]) suratMaxAyat[s.surat] = end;
-    });
-    return juz30.every(s => (suratMaxAyat[s.nm] || 0) >= s.a);
-  }},
-  {id:'khatam_pro', icon:'🏆', name:'Hafiz Pro', desc:'Khatam 3x', condition:()=>{
-    // Ambil jumlahKhatam tertinggi dari record Muroja'ah manapun
-    let maxKhatam = 0;
-    dataSetoran.forEach(s => {
-      if ((s.tambahan || s.ket || '').replace('-','').trim() === "Muroja'ah" && s.jumlahKhatam) {
-        if (s.jumlahKhatam > maxKhatam) maxKhatam = s.jumlahKhatam;
+  {
+    id: 'first_step', icon: '👣', name: 'Langkah Pertama',
+    desc: 'Setoran pertama kali',
+    progress: (nf) => { const n = _badgeSetoran(nf).length; return { val: Math.min(n,1), max:1, label: n>0?`${n} setoran`:'Belum ada setoran' }; },
+    condition: (nf) => _badgeSetoran(nf).length >= 1
+  },
+  {
+    id: 'week_warrior', icon: '🔥', name: 'Pemula Rajin',
+    desc: '7 hari berturut-turut',
+    progress: (nf) => { const s=_badgeMaxStreak(nf); return { val:Math.min(s,7), max:7, label:`${s}/7 hari` }; },
+    condition: (nf) => _badgeMaxStreak(nf) >= 7
+  },
+  {
+    id: 'month_master', icon: '🌙', name: 'Bulan Penuh',
+    desc: '30 hari berturut-turut',
+    progress: (nf) => { const s=_badgeMaxStreak(nf); return { val:Math.min(s,30), max:30, label:`${s}/30 hari` }; },
+    condition: (nf) => _badgeMaxStreak(nf) >= 30
+  },
+  {
+    id: 'perfect_l', icon: '💯', name: 'Sempurna',
+    desc: '10 setoran Lancar berturut-turut',
+    progress: (nf) => {
+      const ds = _badgeSetoran(nf);
+      let streak = 0;
+      for (let i = 0; i < ds.length; i++) {
+        if (ds[i].stat === 'L') streak++; else break;
       }
-    });
-    return maxKhatam >= 3;
-  }},
-  {id:'early_bird', icon:'🌅', name:'Early Bird', desc:'Setoran sebelum jam 8 pagi', condition:()=>false},
-  {id:'night_owl', icon:'🦉', name:'Night Owl', desc:'Setoran malam hari', condition:()=>false}
+      return { val: Math.min(streak,10), max:10, label:`${streak}/10 lancar` };
+    },
+    condition: (nf) => {
+      const ds = _badgeSetoran(nf);
+      for (let i = 0; i < Math.min(ds.length,10); i++) { if (ds[i].stat !== 'L') return false; }
+      return ds.length >= 10;
+    }
+  },
+  {
+    id: 'khatam_1', icon: '🎓', name: 'Khatam Pertama',
+    desc: 'Selesai Juz Amma lengkap',
+    progress: (nf) => {
+      const juz30 = ALL_SURAT.filter(s => s.juz === 30);
+      const ds = _badgeSetoran(nf);
+      const suratMaxAyat = {};
+      ds.forEach(s => {
+        if (!s.rentang) return;
+        const parts = s.rentang.split('-');
+        const end = parseInt(parts[1]||parts[0])||0;
+        if (!suratMaxAyat[s.surat]||end>suratMaxAyat[s.surat]) suratMaxAyat[s.surat]=end;
+      });
+      const done = juz30.filter(s => (suratMaxAyat[s.nm]||0) >= s.a).length;
+      return { val:done, max:juz30.length, label:`${done}/${juz30.length} surat` };
+    },
+    condition: (nf) => {
+      const juz30 = ALL_SURAT.filter(s => s.juz === 30);
+      const ds = _badgeSetoran(nf);
+      const suratMaxAyat = {};
+      ds.forEach(s => {
+        if (!s.rentang) return;
+        const parts = s.rentang.split('-');
+        const end = parseInt(parts[1]||parts[0])||0;
+        if (!suratMaxAyat[s.surat]||end>suratMaxAyat[s.surat]) suratMaxAyat[s.surat]=end;
+      });
+      return juz30.every(s => (suratMaxAyat[s.nm]||0) >= s.a);
+    }
+  },
+  {
+    id: 'khatam_pro', icon: '🏆', name: 'Hafiz Pro',
+    desc: 'Khatam Juz Amma 3x (Muroja\'ah)',
+    progress: (nf) => {
+      let max = 0;
+      _badgeSetoran(nf).forEach(s => {
+        if ((s.tambahan||'').trim() === "Muroja'ah" && s.jumlahKhatam > max) max = s.jumlahKhatam;
+      });
+      return { val:Math.min(max,3), max:3, label:`${max}/3 khatam` };
+    },
+    condition: (nf) => {
+      let max = 0;
+      _badgeSetoran(nf).forEach(s => {
+        if ((s.tambahan||'').trim() === "Muroja'ah" && s.jumlahKhatam > max) max = s.jumlahKhatam;
+      });
+      return max >= 3;
+    }
+  },
+  {
+    id: 'early_bird', icon: '🌅', name: 'Early Bird',
+    desc: 'Setoran sebelum jam 08.00',
+    progress: (nf) => {
+      const found = _badgeSetoran(nf).some(s => {
+        const t = s.inputAt?.toDate ? s.inputAt.toDate() : (s.inputAt ? new Date(s.inputAt) : null);
+        return t && t.getHours() < 8;
+      });
+      return { val: found?1:0, max:1, label: found?'Sudah dicapai':'Belum ada setoran pagi' };
+    },
+    condition: (nf) => _badgeSetoran(nf).some(s => {
+      const t = s.inputAt?.toDate ? s.inputAt.toDate() : (s.inputAt ? new Date(s.inputAt) : null);
+      return t && t.getHours() < 8;
+    })
+  },
+  {
+    id: 'night_owl', icon: '🦉', name: 'Night Owl',
+    desc: 'Setoran setelah jam 20.00',
+    progress: (nf) => {
+      const found = _badgeSetoran(nf).some(s => {
+        const t = s.inputAt?.toDate ? s.inputAt.toDate() : (s.inputAt ? new Date(s.inputAt) : null);
+        return t && t.getHours() >= 20;
+      });
+      return { val: found?1:0, max:1, label: found?'Sudah dicapai':'Belum ada setoran malam' };
+    },
+    condition: (nf) => _badgeSetoran(nf).some(s => {
+      const t = s.inputAt?.toDate ? s.inputAt.toDate() : (s.inputAt ? new Date(s.inputAt) : null);
+      return t && t.getHours() >= 20;
+    })
+  },
+  {
+    id: 'rajin_50', icon: '⭐', name: 'Super Rajin',
+    desc: '50 setoran total',
+    progress: (nf) => { const n=_badgeSetoran(nf).length; return { val:Math.min(n,50), max:50, label:`${n}/50 setoran` }; },
+    condition: (nf) => _badgeSetoran(nf).length >= 50
+  },
+  {
+    id: 'tasmi_done', icon: '🎤', name: 'Tasmi\'',
+    desc: 'Lulus ujian Tasmi\'',
+    progress: (nf) => {
+      const done = (nf||[]).some ? (nf||[]).some(n => getSiswaTahfidhInfo(n).ket === "Tasmi'")
+        : masterSiswa.some(s => getSiswaTahfidhInfo(s.nama).ket === "Tasmi'");
+      return { val: done?1:0, max:1, label: done?'Sudah Tasmi\'':'Belum Tasmi\'' };
+    },
+    condition: (nf) => (nf && nf.length)
+      ? nf.some(n => getSiswaTahfidhInfo(n).ket === "Tasmi'")
+      : masterSiswa.some(s => getSiswaTahfidhInfo(s.nama).ket === "Tasmi'")
+  }
 ];
 
 /* ==============================
@@ -4881,17 +5017,17 @@ const ST = (() => {
 
   /* ---- Pribadi ---- */
   function _renderPersonal() {
-    renderBadgesGrid();
     renderKelasChips('kelasChipsPersonal', 'kelasFilterPersonal', activeKelasPersonal, 'setKelasPersonal', 'master');
     _rebuildPersonalSiswaSelect();
 
-    // Tentukan daftar nama siswa berdasar filter kelas + pilihan siswa
     const siswaDiKelas = activeKelasPersonal === 'SEMUA'
       ? masterSiswa.map(s => s.nama)
       : masterSiswa.filter(s => (s.kelas || 'Umum').trim() === activeKelasPersonal).map(s => s.nama);
     const namaFilter = (activePersonalSiswa && activePersonalSiswa !== 'SEMUA')
       ? [activePersonalSiswa]
       : siswaDiKelas;
+
+    renderBadgesGrid(namaFilter);
 
     const setoranFiltered = dataSetoran.filter(d => namaFilter.includes(d.nama));
     const labels = [], lancar = [], kl = [];
@@ -5200,30 +5336,50 @@ const ST = (() => {
 })();
 
 /* ---- Badge helpers ---- */
-function renderBadgesGrid() {
+function renderBadgesGrid(namaFilter) {
   const grid = document.getElementById('badgesGrid');
   if (!grid) return;
-  grid.innerHTML = BADGES.map(badge => {
-    const ok = badge.condition();
-    return `<div class="badge-item ${ok?'':'locked'}" onclick="showBadgeDetail('${badge.id}')">
-      <div class="badge-icon">${badge.icon}</div>
-      <div class="badge-name">${badge.name}</div>
-      <div class="badge-desc">${ok?'✓':'🔒'} ${badge.desc}</div>
-    </div>`;
-  }).join('');
+  const nf = namaFilter || null;
+  const unlocked = [], locked = [];
+  BADGES.forEach(b => {
+    const ok = b.condition(nf);
+    const prog = b.progress ? b.progress(nf) : null;
+    const pct = prog ? Math.round(prog.val / prog.max * 100) : (ok ? 100 : 0);
+    (ok ? unlocked : locked).push({ ...b, ok, prog, pct });
+  });
+  const all = [...unlocked, ...locked];
+  grid.innerHTML = all.map(b => `
+    <div class="badge-item ${b.ok ? 'unlocked' : 'locked'}" onclick="showBadgeDetail('${b.id}',${JSON.stringify(nf)})">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      ${b.ok
+        ? `<div class="badge-status ok">✓ Terbuka</div>`
+        : `<div class="badge-prog-bar"><div class="badge-prog-fill" style="width:${b.pct}%"></div></div>
+           <div class="badge-prog-label">${b.prog?.label || b.desc}</div>`
+      }
+    </div>`).join('');
 }
 
-function showBadgeDetail(id) {
+function showBadgeDetail(id, namaFilter) {
   const badge = BADGES.find(b => b.id === id);
   if (!badge) return;
-  const unlocked = badge.condition();
+  const nf = namaFilter || null;
+  const unlocked = badge.condition(nf);
+  const prog = badge.progress ? badge.progress(nf) : null;
+  const pct = prog ? Math.round(prog.val / prog.max * 100) : (unlocked ? 100 : 0);
   document.getElementById('badgeModalBody').innerHTML = `
-    <div style="text-align:center;padding:25px;">
-      <div style="font-size:var(--f4xl);margin-bottom:15px;">${badge.icon}</div>
-      <h3 style="margin-bottom:8px;color:var(--txt);font-size:var(--f2xl);">${badge.name}</h3>
-      <p style="color:var(--mut);font-size:var(--flg);margin-bottom:20px;">${badge.desc}</p>
-      <div style="padding:14px;background:${unlocked?'var(--g1)':'#fff0f0'};border-radius:12px;font-size:var(--fmd);">
-        ${unlocked?'✅ Lencana telah terbuka!':'🔒 Belum terbuka. Lanjutkan mengaji untuk membuka lencana ini.'}
+    <div style="text-align:center;padding:20px 16px 24px;">
+      <div style="font-size:52px;margin-bottom:12px;${unlocked?'':'filter:grayscale(1);opacity:.5;'}">${badge.icon}</div>
+      <h3 style="margin-bottom:4px;color:var(--txt);font-size:var(--f2xl);font-weight:800;">${badge.name}</h3>
+      <p style="color:var(--mut);font-size:var(--fmd);margin-bottom:16px;">${badge.desc}</p>
+      ${prog ? `
+        <div style="background:var(--g1);border-radius:10px;height:10px;overflow:hidden;margin-bottom:6px;">
+          <div style="height:100%;width:${pct}%;background:${unlocked?'var(--g6)':'#f59e0b'};border-radius:10px;transition:width .4s;"></div>
+        </div>
+        <div style="font-size:var(--fsm);color:var(--mut);margin-bottom:16px;">${prog.label}</div>
+      ` : ''}
+      <div style="padding:12px;background:${unlocked?'var(--g1)':'#fff7ed'};border-radius:10px;font-size:var(--fmd);font-weight:600;color:${unlocked?'var(--g7)':'#c2410c'};">
+        ${unlocked ? '✅ Lencana telah terbuka!' : '🔒 Belum terbuka — terus semangat!'}
       </div>
     </div>`;
   document.getElementById('badgeModal').classList.add('show');
@@ -5878,17 +6034,15 @@ function recalcAllStreaks(){
 }
 
 function checkAchievements(nama){
-  const userSetoran = dataSetoran.filter(s=>s.nama === nama);
-  if(userSetoran.length === 1){
-    showAchievement('Langkah Pertama!', 'Setoran pertama berhasil dicatat');
-  }
-  if(userStreaks[nama] === 7){
-    showAchievement('Pemula Rajin!', '7 hari mengaji tanpa putus');
-  }
-  const completedSurat = new Set(userSetoran.map(s=>s.surat));
-  if(completedSurat.size === 37 && userSetoran.length <= 37){
-    showAchievement('Khatam Juz 30!', 'Alhamdulillah, Juz 30 selesai');
-  }
+  const nf = [nama];
+  const prev = JSON.parse(localStorage.getItem('unlockedBadges')||'[]');
+  BADGES.forEach(b => {
+    if (!prev.includes(b.id) && b.condition(nf)) {
+      showAchievement(b.icon + ' ' + b.name, b.desc);
+      prev.push(b.id);
+    }
+  });
+  localStorage.setItem('unlockedBadges', JSON.stringify(prev));
 }
 
 // Konversi record setoran ke string tanggal YYYY-MM-DD
