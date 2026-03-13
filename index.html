@@ -4852,11 +4852,14 @@ const ST = (() => {
       const muroja  = setoranSiswa.filter(d => d.tambahan === "Muroja'ah").length;
       const biasa   = setoranSiswa.length - tasmi - muroja;
       const total   = setoranSiswa.length;
-      userStats[s.nama] = { biasa, muroja, tasmi, total };
+      const info    = getSiswaTahfidhInfo(s.nama);
+      const tier    = TIER_WEIGHT[info.ket || ''] || 0;
+      userStats[s.nama] = { biasa, muroja, tasmi, total, tier };
     });
+    // Urut: tier pencapaian dulu (Tasmi' > Muroja'ah > Belum Khatam), lalu total setoran
     const sorted = Object.entries(userStats)
-      .sort((a,b) => b[1].total - a[1].total)
-      .slice(0,10);
+      .sort((a, b) => b[1].tier - a[1].tier || b[1].total - a[1].total)
+      .slice(0, 10);
     const emptyEl = document.getElementById('cvClassEmpty');
     const cv = document.getElementById('cvClass');
     const isEmpty = !sorted.length || sorted.every(x => x[1].total === 0);
@@ -5124,21 +5127,36 @@ function showLeaderboard() {
 }
 
 /* ---- Leaderboard (dipanggil internal oleh ST) ---- */
+// Bobot tier pencapaian — Tasmi' paling tinggi
+const TIER_WEIGHT = { "Tasmi'": 3, "Muroja'ah": 2, "Belum Khatam": 1 };
+const TIER_LABEL  = {
+  "Tasmi'"    : '<span style="font-size:.75em;background:#fefce8;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px;">🎤 Tasmi\'</span>',
+  "Muroja'ah" : '<span style="font-size:.75em;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px;">🔁 Muroja\'ah</span>',
+  "Belum Khatam": '<span style="font-size:.75em;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px;">📖 Belum Khatam</span>'
+};
+
 function _renderLeaderboard() {
   const sorted = masterSiswa.map(s => {
-    const us = dataSetoran.filter(d => d.nama === s.nama);
-    return { nama:s.nama, points:userPoints[s.nama]||0, setoran:us.length, lancar:us.filter(d=>d.stat==='L').length };
-  }).sort((a,b) => b.points - a.points);
+    const us   = dataSetoran.filter(d => d.nama === s.nama);
+    const info = getSiswaTahfidhInfo(s.nama);
+    const ket  = info.ket || '';
+    const tier = TIER_WEIGHT[ket] || 0;
+    const base = userPoints[s.nama] || 0;
+    // Skor gabungan: tier menentukan kelompok, poin menentukan urutan dalam kelompok
+    const score = tier * 100000 + base;
+    return { nama: s.nama, points: base, setoran: us.length, lancar: us.filter(d => d.stat === 'L').length, ket, tier, score };
+  }).sort((a, b) => b.score - a.score);
+
   const list = document.getElementById('leaderboardList');
   if (!sorted.length) {
     list.innerHTML = '<div class="empty"><div class="eico">🏆</div><p>Belum ada data ranking</p></div>'; return;
   }
-  const icons=['🥇','🥈','🥉'], cls=['gold','silver','bronze'];
-  list.innerHTML = sorted.map((u,i) => `
+  const icons = ['🥇','🥈','🥉'], cls = ['gold','silver','bronze'];
+  list.innerHTML = sorted.map((u, i) => `
     <div class="leaderboard-item">
-      <div class="leaderboard-rank ${cls[i]||''}">${icons[i]||i+1}</div>
+      <div class="leaderboard-rank ${cls[i]||''}">${icons[i] || i+1}</div>
       <div class="leaderboard-info">
-        <div class="leaderboard-name">${u.nama}</div>
+        <div class="leaderboard-name">${u.nama}${TIER_LABEL[u.ket]||''}</div>
         <div class="leaderboard-points">${u.setoran} setoran • ${u.lancar} lancar</div>
       </div>
       <div class="leaderboard-value">${u.points}⭐</div>
@@ -5626,9 +5644,10 @@ function simpanSetoran(){
   // Optimistic local update
   dataSetoran.unshift(rec);
   localStorage.setItem('db_setoran', JSON.stringify(dataSetoran));
-  // Update points locally
+  // Update points locally — Tasmi' > Muroja'ah > Setoran biasa
   if(!userPoints[nama]) userPoints[nama] = 0;
-  userPoints[nama] += rec.stat === 'L' ? 10 : 5;
+  const _tierMult = tambahan === "Tasmi'" ? 2.0 : tambahan === "Muroja'ah" ? 1.5 : 1.0;
+  userPoints[nama] += Math.round((rec.stat === 'L' ? 10 : 5) * _tierMult);
   const today = new Date().toDateString();
   if(lastActive !== today){
     if(!userStreaks[nama]) userStreaks[nama] = 0;
@@ -7260,9 +7279,14 @@ async function simpanPencapaianAwal(){
   dataSetoran = [...newRecords, ...dataSetoran];
   localStorage.setItem('db_setoran', JSON.stringify(dataSetoran));
 
-  // Add points
+  // Add points — tier pencapaian menentukan besar poin
+  // Tasmi' > Muroja'ah > Belum Khatam, sesuai hierarki pencapaian
+  const _PA_PER_SURAT = { "Tasmi'": 10, "Muroja'ah": 8, "Belum Khatam": 5 };
+  const _PA_BONUS     = { "Tasmi'": 200, "Muroja'ah": 100, "Belum Khatam": 30 };
+  const _perSurat = _PA_PER_SURAT[mpaKetVal] ?? 5;
+  const _bonus    = _PA_BONUS[mpaKetVal]    ?? 15;
   if(!userPoints[nama]) userPoints[nama] = 0;
-  userPoints[nama] += toInsert.length * 5;
+  userPoints[nama] += toInsert.length * _perSurat + _bonus;
   localStorage.setItem('db_points', JSON.stringify(userPoints));
 
   // Write to Firestore
