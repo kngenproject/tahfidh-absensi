@@ -3752,23 +3752,34 @@ let activeKelasMpa        = 'SEMUA';
 
 // ─── Kredensial admin (hardcode) ───────────────────────────────
 
-async function startApp() {
+// Muat konfigurasi tahun ajaran dari Firestore (atau localStorage sebagai fallback)
+async function loadConfig() {
+  // Coba baca doc config/app; jika tidak ada pakai localStorage
   try {
-    await loadConfig();
-    await setupRealtimeListeners();
+    const snap = await fbDb.collection('config').doc('app').get({ source: 'server' });
+    tahunAjaranAktif = (snap.exists && snap.data().tahunAjaran)
+      ? snap.data().tahunAjaran
+      : (localStorage.getItem('tahunAjaranAktif') || '');
   } catch(e) {
-    console.warn('[FB] Init error:', e);
-    masterSiswa  = JSON.parse(localStorage.getItem('db_master_siswa')||'[]');
-    dataSetoran  = JSON.parse(localStorage.getItem('db_setoran')||'[]');
-    dataAbsensi  = JSON.parse(localStorage.getItem('db_absensi_harian')||'[]');
-    userPoints   = JSON.parse(localStorage.getItem('db_points')||'{}');
-    userStreaks   = JSON.parse(localStorage.getItem('db_streaks')||'{}');
+    tahunAjaranAktif = localStorage.getItem('tahunAjaranAktif') || '';
   }
-  initAppUI();
+  localStorage.setItem('tahunAjaranAktif', tahunAjaranAktif);
 }
 
-// Auto-start app tanpa login
-startApp();
+async function startApp() {
+  showSyncing();
+  // loadConfig + fetchAllData sudah handle semua error & render UI
+  await loadConfig();
+  await fetchAllData();   // error-handling ada di dalam fetchAllData
+  initAppUI();            // dispatch firebase-ready untuk init pelengkap
+}
+
+// Tunda startApp sampai DOM siap agar showSyncing() bisa akses elemen
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
 
 
 
@@ -3887,9 +3898,12 @@ async function fetchAllData(){
       const _absensiToday = localStorage.getItem(`db_absensi_${_todayCacheKey}`);
       dataAbsensi = _absensiToday ? JSON.parse(_absensiToday) : JSON.parse(localStorage.getItem('db_absensi_harian') || '[]');
     } catch(e2) {
-      console.warn('[FB] Cache Firestore juga gagal:', e2);
-      masterSiswa = []; dataSetoran = []; dataAbsensi = [];
-      userPoints = {}; userStreaks = {};
+      console.warn('[FB] Cache Firestore juga gagal, pakai localStorage:', e2);
+      masterSiswa  = JSON.parse(localStorage.getItem('db_master_siswa')||'[]');
+      dataSetoran  = JSON.parse(localStorage.getItem('db_setoran')||'[]');
+      dataAbsensi  = JSON.parse(localStorage.getItem('db_absensi_harian')||'[]');
+      userPoints   = JSON.parse(localStorage.getItem('db_points')||'{}');
+      userStreaks   = JSON.parse(localStorage.getItem('db_streaks')||'{}');
     }
   }
 
@@ -4945,11 +4959,34 @@ function updateProgressRing(){
     txtEl.textContent = txt;
   }
 
-  // ── Mode SEMUA: agregat — berapa surat sudah disentuh minimal 1 siswa ──
+  // ── Mode SEMUA: rata-rata progress seluruh siswa (sama dg logika statistik) ──
   if (activeDashboardSiswa === 'SEMUA') {
-    const covered = new Set(filtered.filter(s => juzNamaSet.has(s.surat)).map(s => s.surat));
-    const pct = totalSurat > 0 ? Math.floor((covered.size / totalSurat) * 100) : 0;
-    applyRing(pct, `${covered.size} dari ${totalSurat} surat sudah disetorkan`, `${covered.size}/${totalSurat}`);
+    const siswaDitampil = activeDashboardKelas === 'SEMUA'
+      ? masterSiswa
+      : masterSiswa.filter(s => (s.kelas||'Umum').trim() === activeDashboardKelas);
+    if (!siswaDitampil.length) {
+      applyRing(0, 'Belum ada siswa', '0/0');
+      return;
+    }
+    let totalPct = 0;
+    let khatam = 0, muroja = 0, tasmi = 0, belum = 0;
+    siswaDitampil.forEach(s => {
+      const info = getSiswaTahfidhInfo(s.nama);
+      const prog = getSiswaJuzProgress(s.nama, info.ket);
+      totalPct += prog.pct;
+      if (prog.isTasmi) tasmi++;
+      else if (prog.isMuroja) muroja++;
+      else if (prog.pct > 0) belum++;
+      else belum++;
+      if (prog.khatamCount === prog.totalSurat) khatam++;
+    });
+    const avgPct = Math.floor(totalPct / siswaDitampil.length);
+    const parts = [];
+    if (tasmi)  parts.push(`${tasmi} Tasmi'`);
+    if (muroja) parts.push(`${muroja} Muroja'ah`);
+    if (khatam && !muroja && !tasmi) parts.push(`${khatam} khatam`);
+    const sub = parts.length ? parts.join(' · ') : `Rata-rata ${avgPct}%`;
+    applyRing(avgPct, sub, `${siswaDitampil.length} siswa`);
     return;
   }
 
@@ -7477,6 +7514,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Called by Firebase auth after successful login
 document.addEventListener('firebase-ready', function() {
+  // fetchAllData sudah render semua UI utama.
+  // Di sini hanya init pelengkap yang tidak ada di fetchAllData.
   if(typeof XLSX === 'undefined'){
     document.querySelectorAll('[onclick*="download"],[onclick*="simpanAbsensi"],[onclick*="export"]').forEach(btn => {
       btn.disabled = true;
@@ -7492,15 +7531,8 @@ document.addEventListener('firebase-ready', function() {
       slot.appendChild(msg);
     });
   }
-  renderAyatList();
-  renderDdSiswa();
-  renderTblSetoran();
-  updateStrip();
-  renderSiswaCards();
-  updateStatsAbsensi();
-  renderRiwAbsensi();
-  renderDsSiswa();
-  updateDashboard();
+  renderAyatList();   // form setoran — tidak ada di fetchAllData
+  renderDsSiswa();    // tab dashboard siswa selector
   if('Notification' in window && Notification.permission === 'default'){
     setTimeout(()=>{
       const nb = document.getElementById('notifBanner');
@@ -8439,7 +8471,12 @@ function renderProgressBeranda() {
   
   listEl.innerHTML = filtered.map(s => {
     const initial = s.nama.charAt(0).toUpperCase();
-    const suratInfo = s.lastSurat 
+    const prog = getSiswaJuzProgress(s.nama, s.ket);
+    const pct  = prog.pct;
+    const pctLabel = prog.isTasmi ? '🎤 100%'
+                   : prog.isMuroja ? '🔁 100%'
+                   : pct + '%';
+    const suratInfo = s.lastSurat
       ? `${s.lastSurat}${s.lastJuz ? ` • Juz ${s.lastJuz}` : ''} • ${s.jumlahSurat} surat`
       : 'Belum ada setoran';
     return `<div class="prog-row">
@@ -8447,6 +8484,10 @@ function renderProgressBeranda() {
       <div class="prog-info">
         <div class="prog-nama">${s.nama}</div>
         <div class="prog-detail">${s.kelas ? `<span style="color:var(--g6);font-weight:600;">${s.kelas}</span> · ` : ''}${suratInfo}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+          <div class="juz-mini-bar" style="flex:1;"><div class="juz-mini-fill" style="width:${pct}%;"></div></div>
+          <span style="font-size:var(--fxs);color:var(--mut);white-space:nowrap;">${pctLabel}</span>
+        </div>
       </div>
       <div class="prog-right">
         ${getKetBadgeHTML(s.ket, s.jumlahKhatam)}
