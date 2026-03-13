@@ -4825,6 +4825,28 @@ function _badgeMaxStreak(namaFilter) {
   return Math.max(0, ...namaFilter.map(n => userStreaks[n] || 0));
 }
 
+// Helper: hitung surat yang sudah khatam (ayat lengkap + stat L) di Juz 30
+function _buildKhatamL(nf) {
+  const juz30 = ALL_SURAT.filter(s => s.juz === 30);
+  const juz30Set = new Set(juz30.map(s => s.nm));
+  const ds = _badgeSetoran(nf);
+  const suratKhatamL = {};
+  ds.forEach(s => {
+    if (!s.rentang || !juz30Set.has(s.surat)) return;
+    const parts = s.rentang.split('-');
+    const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+    const suratObj = juz30.find(x => x.nm === s.surat);
+    if (suratObj && end >= suratObj.a && s.stat === 'L') suratKhatamL[s.surat] = true;
+  });
+  return { juz30, suratKhatamL };
+}
+
+// Helper: apakah sudah khatam (semua surat juz30, ayat penuh, stat L)
+function _isKhatam(nf) {
+  const { juz30, suratKhatamL } = _buildKhatamL(nf);
+  return juz30.every(s => suratKhatamL[s.nm]);
+}
+
 const BADGES = [
   {
     id: 'first_step', icon: '👣', name: 'Langkah Pertama',
@@ -4863,37 +4885,23 @@ const BADGES = [
   },
   {
     id: 'khatam_1', icon: '🎓', name: 'Khatam Pertama',
-    desc: 'Selesai Juz Amma lengkap',
+    desc: 'Selesai Juz Amma lengkap (sampai An-Naba\', ayat penuh, Lancar)',
     progress: (nf) => {
-      const juz30 = ALL_SURAT.filter(s => s.juz === 30);
-      const ds = _badgeSetoran(nf);
-      const suratMaxAyat = {};
-      ds.forEach(s => {
-        if (!s.rentang) return;
-        const parts = s.rentang.split('-');
-        const end = parseInt(parts[1]||parts[0])||0;
-        if (!suratMaxAyat[s.surat]||end>suratMaxAyat[s.surat]) suratMaxAyat[s.surat]=end;
-      });
-      const done = juz30.filter(s => (suratMaxAyat[s.nm]||0) >= s.a).length;
-      return { val:done, max:juz30.length, label:`${done}/${juz30.length} surat` };
+      const { juz30, suratKhatamL } = _buildKhatamL(nf);
+      const done = juz30.filter(s => suratKhatamL[s.nm]).length;
+      return { val: done, max: juz30.length, label: `${done}/${juz30.length} surat` };
     },
-    condition: (nf) => {
-      const juz30 = ALL_SURAT.filter(s => s.juz === 30);
-      const ds = _badgeSetoran(nf);
-      const suratMaxAyat = {};
-      ds.forEach(s => {
-        if (!s.rentang) return;
-        const parts = s.rentang.split('-');
-        const end = parseInt(parts[1]||parts[0])||0;
-        if (!suratMaxAyat[s.surat]||end>suratMaxAyat[s.surat]) suratMaxAyat[s.surat]=end;
-      });
-      return juz30.every(s => (suratMaxAyat[s.nm]||0) >= s.a);
-    }
+    condition: (nf) => _isKhatam(nf)
   },
   {
     id: 'khatam_pro', icon: '🏆', name: 'Hafiz Pro',
-    desc: 'Khatam Juz Amma 3x (Muroja\'ah)',
+    desc: 'Khatam Juz Amma 3x (Muroja\'ah) — harus sudah khatam',
     progress: (nf) => {
+      if (!_isKhatam(nf)) {
+        const { juz30, suratKhatamL } = _buildKhatamL(nf);
+        const done = juz30.filter(s => suratKhatamL[s.nm]).length;
+        return { val: 0, max: 3, label: `Belum khatam (${done}/${juz30.length} surat)` };
+      }
       let max = 0;
       _badgeSetoran(nf).forEach(s => {
         if ((s.tambahan||'').trim() === "Muroja'ah" && s.jumlahKhatam > max) max = s.jumlahKhatam;
@@ -4901,6 +4909,7 @@ const BADGES = [
       return { val:Math.min(max,3), max:3, label:`${max}/3 khatam` };
     },
     condition: (nf) => {
+      if (!_isKhatam(nf)) return false;
       let max = 0;
       _badgeSetoran(nf).forEach(s => {
         if ((s.tambahan||'').trim() === "Muroja'ah" && s.jumlahKhatam > max) max = s.jumlahKhatam;
