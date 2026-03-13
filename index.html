@@ -7523,6 +7523,8 @@ function onMpaSiswaChange(){
   }
   const hasData = dataSetoran.some(s => s.nama === nama);
   document.getElementById('mpaExistWarning').style.display = hasData ? 'block' : 'none';
+  // Refresh ayat dropdown jika surat sudah dipilih (supaya batasan ayat ikut siswa baru)
+  if(document.getElementById('mpaSuratSampai').value !== '') onMpaSuratChange();
 }
 
 function renderMpaJuzChips(){
@@ -7608,26 +7610,53 @@ function onMpaSuratChange(){
   }
   const idx = parseInt(v);
   const s = SURAT_JUZ30[idx];
-  // Build ayat dropdown
+  const nama = document.getElementById('mpaSiswa').value;
+
+  // Cari max ayat yang sudah pernah disetorkan siswa untuk surat ini
+  let maxSetoran = 0;
+  if(nama){
+    dataSetoran.filter(d => d.nama === nama && d.surat === s.nm).forEach(d => {
+      if(!d.rentang) return;
+      const parts = d.rentang.split('-');
+      const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+      if(end > maxSetoran) maxSetoran = end;
+    });
+  }
+  // Batas atas: kalau ada setoran → sampai max yang sudah disetorkan, kalau belum → semua ayat
+  const maxAyat = maxSetoran > 0 ? maxSetoran : s.a;
+
+  // Build ayat dropdown hanya sampai maxAyat
   ayatSel.innerHTML = '';
-  for(let a = 1; a <= s.a; a++){
+  for(let a = 1; a <= maxAyat; a++){
     ayatSel.add(new Option(`Ayat ${a}`, a));
   }
-  // Default: last ayat (full surat)
-  ayatSel.value = s.a;
+  // Default: ayat terakhir yang tersedia
+  ayatSel.value = maxAyat;
   syncCsdTrigger('mpaAyatSampai');
   // Show helpers
   ayatWrap.style.display = 'block';
   ayatHelper.style.display = 'flex';
-  document.getElementById('mpaAyatHelperTxt').textContent = `Total: ${s.a} ayat`;
+  document.getElementById('mpaAyatHelperTxt').textContent = `Sudah disetorkan: ${maxAyat} ayat`;
   updateQuickPreview();
 }
 
 function setMpaAyatAll(){
   const v = document.getElementById('mpaSuratSampai').value;
   if(v === '') return;
-  const s = SURAT_JUZ30[parseInt(v)];
-  document.getElementById('mpaAyatSampai').value = s.a;
+  const idx = parseInt(v);
+  const s = SURAT_JUZ30[idx];
+  const nama = document.getElementById('mpaSiswa').value;
+  let maxSetoran = 0;
+  if(nama){
+    dataSetoran.filter(d => d.nama === nama && d.surat === s.nm).forEach(d => {
+      if(!d.rentang) return;
+      const parts = d.rentang.split('-');
+      const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+      if(end > maxSetoran) maxSetoran = end;
+    });
+  }
+  const maxAyat = maxSetoran > 0 ? maxSetoran : s.a;
+  document.getElementById('mpaAyatSampai').value = maxAyat;
   syncCsdTrigger('mpaAyatSampai');
   updateQuickPreview();
 }
