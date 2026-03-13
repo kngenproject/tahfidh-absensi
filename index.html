@@ -4572,16 +4572,28 @@ function getSiswaJuzProgress(nama, ket) {
 
   // Untuk setiap surat: track max ayat (untuk posisi frontier)
   // dan apakah ada setoran ayat penuh + stat L (untuk dihitung khatam)
-  const suratMaxAyat = {};  // max end-ayat dari semua setoran
-  const suratKhatamL = {};  // true jika pernah setoran penuh & L
+  const suratMaxAyat      = {};  // max end-ayat dari semua setoran
+  const suratKhatamL      = {};  // true jika pernah setoran penuh & L
+  const suratNasNabaStart = {};  // min start-ayat data-awal nas-naba partial
 
   setoranSiswa.forEach(s => {
     if (!s.rentang || !juzNamaSet.has(s.surat)) return;
     const parts = s.rentang.split('-');
-    const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+    const start = parseInt(parts[0]) || 1;
+    const end   = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
     if (!suratMaxAyat[s.surat] || end > suratMaxAyat[s.surat]) suratMaxAyat[s.surat] = end;
+    // arahHafalan hanya ada di record simpanPencapaianAwal, tidak ada di setoran biasa
+    const isNasNabaPartial = s.arahHafalan === 'nas-naba' && start > 1;
+    if (isNasNabaPartial) {
+      if (!suratNasNabaStart[s.surat] || start < suratNasNabaStart[s.surat])
+        suratNasNabaStart[s.surat] = start;
+    }
     const suratObj = juzList.find(x => x.nm === s.surat);
-    if (suratObj && end >= suratObj.a && s.stat === 'L') suratKhatamL[s.surat] = true;
+    if (suratObj && end >= suratObj.a && s.stat === 'L') {
+      // Ayat sebelum start belum disetorkan → surat ini belum khatam
+      if (isNasNabaPartial) return;
+      suratKhatamL[s.surat] = true;
+    }
   });
 
   // Muroja'ah: ring 100%, tampilkan posisi frontier muroja'ah
@@ -4611,7 +4623,11 @@ function getSiswaJuzProgress(nama, ket) {
     if (suratKhatamL[s.nm]) { linearAyat += s.a; khatamCount++; }
   }
   // Surat frontier: posisi ayat dari max yang dicapai, khatam hanya kalau suratKhatamL
-  const frontierAyat = Math.min(suratMaxAyat[fs.nm] || 0, fs.a);
+  // Untuk nas-naba partial: ayat yang disetorkan = totalAyat - (start-1)
+  let frontierAyat = Math.min(suratMaxAyat[fs.nm] || 0, fs.a);
+  if (suratNasNabaStart[fs.nm]) {
+    frontierAyat = fs.a - suratNasNabaStart[fs.nm] + 1;
+  }
   linearAyat += frontierAyat;
   if (suratKhatamL[fs.nm]) khatamCount++;
 
@@ -4661,12 +4677,47 @@ function onJuzChange(){
   updateProgressRing();
 }
 
+/**
+ * Ambil riwayat siswa dengan data-awal di-deduplicate per batch (per tanggal).
+ * Setiap batch data awal hanya diwakili 1 record: record partial (frontier),
+ * yaitu surat yang rentangnya tidak mencakup seluruh ayat surat tersebut.
+ * Jika semua penuh, ambil record pertama dalam batch.
+ * Identifier data-awal: record punya field arahHafalan ('naba-nas'/'nas-naba'/'manual').
+ */
+function _getDedupeRiwayat(nama) {
+  const all = dataSetoran.filter(s => s.nama === nama);
+  const result = [];
+  const seenDataAwalTgl = new Set();
+  for (const r of all) {
+    const isDataAwal = !!r.arahHafalan; // hanya ada di record simpanPencapaianAwal
+    if (isDataAwal) {
+      const key = r.tgl + '|' + r.arahHafalan;
+      if (seenDataAwalTgl.has(key)) continue;
+      seenDataAwalTgl.add(key);
+      // Cari record partial (frontier) dari batch ini
+      const batch = all.filter(x => x.arahHafalan === r.arahHafalan && x.tgl === r.tgl);
+      const frontier = batch.find(b => {
+        const suratObj = ALL_SURAT.find(sx => sx.nm === b.surat);
+        if (!suratObj) return false;
+        const pts   = (b.rentang || '').split('-');
+        const start = parseInt(pts[0]) || 1;
+        const end   = parseInt(pts[pts.length - 1]) || 0;
+        return start > 1 || end < suratObj.a; // partial
+      }) || batch[0];
+      result.push(frontier);
+    } else {
+      result.push(r);
+    }
+  }
+  return result;
+}
+
 // Tampilkan riwayat hafalan terakhir siswa
 function showSiswaHafalanHistory(nama){
   const panel = document.getElementById('siswaHafalanHistory');
   if(!panel) return;
   if(!nama){ panel.style.display='none'; return; }
-  const riwayat = dataSetoran.filter(s => s.nama === nama).slice(0, 5);
+  const riwayat = _getDedupeRiwayat(nama).slice(0, 5);
   if(!riwayat.length){
     panel.style.display = 'block';
     panel.innerHTML = `<div style="color:var(--mut); text-align:center; padding:6px 0;">
@@ -5032,9 +5083,14 @@ function _buildKhatamL(nf) {
   ds.forEach(s => {
     if (!s.rentang || !juz30Set.has(s.surat)) return;
     const parts = s.rentang.split('-');
-    const end = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
+    const start = parseInt(parts[0]) || 1;
+    const end   = parseInt(parts.length > 1 ? parts[1] : parts[0]) || 0;
     const suratObj = juz30.find(x => x.nm === s.surat);
-    if (suratObj && end >= suratObj.a && s.stat === 'L') suratKhatamL[s.surat] = true;
+    if (suratObj && end >= suratObj.a && s.stat === 'L') {
+      // Data-awal nas-naba partial: ayat sebelum start belum disetorkan → belum khatam
+      if (s.arahHafalan === 'nas-naba' && start > 1) return;
+      suratKhatamL[s.surat] = true;
+    }
   });
   return { juz30, suratKhatamL };
 }
