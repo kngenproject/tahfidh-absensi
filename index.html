@@ -4605,9 +4605,10 @@ function updateStreakDisplay(){
 function updatePointsDisplay(){
   let totalPoints = 0;
   if(activeDashboardSiswa === 'SEMUA'){
-    Object.values(userPoints).forEach(p=> totalPoints += p);
+    // Semua siswa: jumlahkan poin efektif masing-masing
+    masterSiswa.forEach(s => { totalPoints += getEffectivePoints(s.nama); });
   } else {
-    totalPoints = userPoints[activeDashboardSiswa] || 0;
+    totalPoints = getEffectivePoints(activeDashboardSiswa);
   }
   document.getElementById('pointsCount').textContent = totalPoints;
 }
@@ -5198,23 +5199,39 @@ function showLeaderboard() {
 /* ---- Leaderboard (dipanggil internal oleh ST) ---- */
 // Bobot tier pencapaian — Tasmi' paling tinggi
 const TIER_WEIGHT = { "Tasmi'": 3, "Muroja'ah": 2, "Belum Khatam": 1 };
+// Bonus poin permanen berdasarkan pencapaian tertinggi siswa
+// Tasmi' > Muroja'ah > Belum Khatam — selisih cukup besar agar tidak tertukar
+const TIER_BONUS_DISPLAY = { "Tasmi'": 10000, "Muroja'ah": 5000, "Belum Khatam": 1000 };
 const TIER_LABEL  = {
   "Tasmi'"    : '<span style="font-size:.75em;background:#fefce8;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px;">🎤 Tasmi\'</span>',
   "Muroja'ah" : '<span style="font-size:.75em;background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px;">🔁 Muroja\'ah</span>',
   "Belum Khatam": '<span style="font-size:.75em;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px;">📖 Belum Khatam</span>'
 };
 
+// Hitung poin efektif siswa = poin aktivitas + bonus tier pencapaian
+function getEffectivePoints(nama) {
+  const base  = userPoints[nama] || 0;
+  const info  = getSiswaTahfidhInfo(nama);
+  const bonus = TIER_BONUS_DISPLAY[info.ket] || 0;
+  return base + bonus;
+}
+
 function _renderLeaderboard() {
   const sorted = masterSiswa.map(s => {
-    const us   = dataSetoran.filter(d => d.nama === s.nama);
-    const info = getSiswaTahfidhInfo(s.nama);
-    const ket  = info.ket || '';
-    const tier = TIER_WEIGHT[ket] || 0;
-    const base = userPoints[s.nama] || 0;
-    // Skor gabungan: tier menentukan kelompok, poin menentukan urutan dalam kelompok
-    const score = tier * 100000 + base;
-    return { nama: s.nama, points: base, setoran: us.length, lancar: us.filter(d => d.stat === 'L').length, ket, tier, score };
-  }).sort((a, b) => b.score - a.score);
+    const us      = dataSetoran.filter(d => d.nama === s.nama);
+    const info    = getSiswaTahfidhInfo(s.nama);
+    const ket     = info.ket || '';
+    const base    = userPoints[s.nama] || 0;
+    const effective = base + (TIER_BONUS_DISPLAY[ket] || 0);
+    return {
+      nama: s.nama,
+      effective,    // angka yang ditampilkan & dipakai sorting
+      base,         // poin aktivitas murni (untuk sub-label)
+      setoran: us.length,
+      lancar: us.filter(d => d.stat === 'L').length,
+      ket
+    };
+  }).sort((a, b) => b.effective - a.effective);
 
   const list = document.getElementById('leaderboardList');
   if (!sorted.length) {
@@ -5228,7 +5245,7 @@ function _renderLeaderboard() {
         <div class="leaderboard-name">${u.nama}${TIER_LABEL[u.ket]||''}</div>
         <div class="leaderboard-points">${u.setoran} setoran • ${u.lancar} lancar</div>
       </div>
-      <div class="leaderboard-value">${u.points}⭐</div>
+      <div class="leaderboard-value">${u.effective}⭐</div>
     </div>`).join('');
 }
 
