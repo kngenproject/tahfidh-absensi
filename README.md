@@ -1,16 +1,146 @@
 <div align="center">
 
-# 📖 Tamma-Tahfidh Juz Amma
+<img src="https://img.shields.io/badge/TAMMA-v2.3.5-0c4a2a?style=for-the-badge&logo=quora&logoColor=white" alt="version"/>
 
-### Aplikasi Manajemen Hafalan Al-Qur'an Juz Amma Berbasis Web
+# 📖 TAMMA
+### Tahfidh Juz Amma & Absensi Siswa
 
-<br/>
+*Aplikasi manajemen hafalan Al-Qur'an Juz 30 dan absensi siswa berbasis web — offline-first, realtime Firebase.*
 
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
-[![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chart.js&logoColor=white)](https://www.chartjs.org/)
+---
+
+[![Version](https://img.shields.io/badge/Versi-2.3.5-2da55f?style=flat-square&logo=git-lfs&logoColor=white)](https://github.com/USER/tamma/releases)
+[![PWA Ready](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat-square&logo=pwa&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+[![Android APK](https://img.shields.io/badge/Android-APK-3DDC84?style=flat-square&logo=android&logoColor=white)](https://github.com/USER/tamma/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/USER/tamma/build.yml?style=flat-square&label=Build%20APK&logo=github-actions&logoColor=white)](https://github.com/USER/tamma/actions)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Auth](https://img.shields.io/badge/Firebase-Auth-FF6F00?style=flat-square&logo=firebase&logoColor=white)](https://firebase.google.com/products/auth)
+[![License](https://img.shields.io/badge/Lisensi-MIT-blue?style=flat-square)](LICENSE)
+
+</div>
+
+---
+
+## ✨ Fitur Utama
+
+| Fitur | Keterangan |
+|---|---|
+| 📖 **Tahfidh Juz 30** | Input setoran harian per siswa — surat, ayat, status Lancar / Kurang Lancar, keterangan |
+| 🎯 **Pencapaian Awal** | Catat posisi hafalan awal otomatis/manual per surat, lengkap dengan status Belum Khatam / Muroja'ah / Tasmi' |
+| 👥 **Absensi** | Tandai Hadir / Ijin / Sakit / Alpha per sesi, riwayat per tanggal, ekspor Excel per kelas |
+| 📊 **Statistik & Rekap** | Grafik performa mingguan, leaderboard kelas, stacked bar chart per kelas, trend 30 hari |
+| 🏅 **Gamifikasi** | Streak harian, badge pencapaian otomatis, progress ring hafalan |
+| 📂 **Viewer Excel** | Upload `.xlsx/.xls/.csv` untuk ditampilkan & difilter langsung di browser |
+| 🔐 **Login** | Masuk via Google OAuth atau Email/Password (Firebase Auth) |
+| 💾 **Offline-first** | Data tersinkron ke Firestore, tersedia offline via IndexedDB persistence |
+| 📲 **PWA + APK** | Install ke layar utama (PWA) atau unduh APK Android via Capacitor |
+
+---
+
+## 🛠️ Tech Stack
+
+[![HTML5](https://img.shields.io/badge/HTML5-Vanilla-E34F26?style=flat-square&logo=html5&logoColor=white)]()
+[![CSS3](https://img.shields.io/badge/CSS3-Custom%20Properties-1572B6?style=flat-square&logo=css3&logoColor=white)]()
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-F7DF1E?style=flat-square&logo=javascript&logoColor=black)]()
+[![Firebase](https://img.shields.io/badge/Firebase-10.7.1-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Chart.js](https://img.shields.io/badge/Chart.js-4.4.0-FF6384?style=flat-square&logo=chartdotjs&logoColor=white)](https://chartjs.org)
+[![SheetJS](https://img.shields.io/badge/SheetJS-0.18.5-217346?style=flat-square&logo=microsoftexcel&logoColor=white)](https://sheetjs.com)
+[![Capacitor](https://img.shields.io/badge/Capacitor-Android-119EFF?style=flat-square&logo=capacitor&logoColor=white)](https://capacitorjs.com)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Build%20APK-2088FF?style=flat-square&logo=github-actions&logoColor=white)](https://github.com/features/actions)
+
+---
+
+## 🚀 Cara Pakai
+
+### Akses Web (PWA)
+1. Buka URL aplikasi di browser Chrome/Edge/Safari
+2. Login dengan akun Google atau Email
+3. Tap **"Tambahkan ke layar utama"** untuk install sebagai PWA
+
+### Download APK Android
+Unduh APK terbaru dari halaman [**Releases**](https://github.com/USER/tamma/releases), lalu install manual di HP Android.
+
+### Build APK Sendiri
+Build APK tersedia via **GitHub Actions** (trigger manual):
+
+```
+GitHub → Actions → Build APK → Run workflow
+```
+
+---
+
+## 🗂️ Struktur Proyek
+
+```
+tamma/
+├── index.html          # Single-file app (HTML + CSS + JS)
+├── android/            # Capacitor Android project
+│   └── app/
+├── .github/
+│   └── workflows/
+│       └── build.yml   # GitHub Actions — build APK
+└── README.md
+```
+
+---
+
+## ⚙️ Firebase Setup
+
+Aplikasi menggunakan Firebase project `tahfidh-dan-absensi`. Untuk deploy ke project sendiri:
+
+1. Buat project baru di [Firebase Console](https://console.firebase.google.com)
+2. Aktifkan **Firestore Database** dan **Authentication**
+3. Pada Authentication, aktifkan provider:
+   - ✅ Google
+   - ✅ Email/Password
+4. Tambahkan domain ke **Authorized Domains**
+5. Ganti nilai `firebaseConfig` di `index.html`:
+
+```js
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+};
+```
+
+---
+
+## 📋 Struktur Firestore
+
+| Collection | Keterangan |
+|---|---|
+| `siswa` | Data master siswa (nama, kelas, status) |
+| `setoran` | Riwayat setoran hafalan per siswa per tahun ajaran |
+| `absensiHarian` | Absensi per tanggal (doc ID = `YYYY-MM-DD`) |
+| `points` | Poin & streak gamifikasi per siswa |
+| `config/app` | Konfigurasi global (tahun ajaran aktif) |
+
+---
+
+## 📱 Screenshot
+
+> *(Tambahkan screenshot di sini)*
+
+---
+
+## 📄 Lisensi
+
+Dirilis di bawah [MIT License](LICENSE). Bebas digunakan dan dimodifikasi untuk kebutuhan pendidikan.
+
+---
+
+<div align="center">
+
+**TAMMA** — dibuat dengan ❤️ untuk mendukung program tahfidh Al-Qur'an
+
+[![Firebase](https://img.shields.io/badge/Powered%20by-Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=flat-square)]()
+
+</div>
 [![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 
 <br/>
