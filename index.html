@@ -8416,6 +8416,8 @@ window.openEditSiswa = function(fbId){
   document.getElementById('editSiswaKelas').value = s.kelas || '';
   const statusEl = document.getElementById('editSiswaStatus');
   if(statusEl){ statusEl.value = s.status || 'aktif'; syncCsdTrigger('editSiswaStatus'); }
+  const statusTetapEl = document.getElementById('editSiswaStatusTetap');
+  if(statusTetapEl){ statusTetapEl.value = s.statusTetap || ''; syncCsdTrigger('editSiswaStatusTetap'); }
   document.getElementById('editSiswaOverlay').classList.add('show');
 };
 
@@ -8430,12 +8432,19 @@ async function simpanEditSiswa(){
   const nama = document.getElementById('editSiswaNama').value.trim();
   const kelas = document.getElementById('editSiswaKelas').value.trim() || 'Umum';
   const status = document.getElementById('editSiswaStatus')?.value || 'aktif';
+  const statusTetap = document.getElementById('editSiswaStatusTetap')?.value || '';
   if(!nama){ showToast('Nama tidak boleh kosong','warning'); return; }
   try {
-    await fbDb.collection('siswa').doc(id).update({
+    const updateData = {
       nama, kelas, status,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    if (statusTetap) {
+      updateData.statusTetap = statusTetap;
+    } else {
+      updateData.statusTetap = firebase.firestore.FieldValue.delete();
+    }
+    await fbDb.collection('siswa').doc(id).update(updateData);
     // Refresh lokal
     const snapSiswa = await fbDb.collection('siswa').where('status','==','aktif').get();
     masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
@@ -8710,7 +8719,15 @@ const KET_PRIORITY = {"Tasmi'": 3, "Muroja'ah": 2, "Belum Khatam": 1};
 
 function getSiswaTahfidhInfo(nama) {
   const setorans = dataSetoran.filter(s => s.nama === nama);
-  if (!setorans.length) return { ket: '', lastSurat: null, lastJuz: null, jumlahSurat: 0, totalSetoran: 0, jumlahKhatam: null };
+
+  // ── statusTetap override: jika diset manual di data siswa, gunakan itu ──
+  const siswaObj = masterSiswa.find(s => s.nama === nama);
+  const statusTetap = (siswaObj?.statusTetap || '').trim();
+
+  if (!setorans.length) {
+    if (statusTetap) return { ket: statusTetap, lastSurat: null, lastJuz: null, jumlahSurat: 0, totalSetoran: 0, jumlahKhatam: null, isStatusTetap: true };
+    return { ket: '', lastSurat: null, lastJuz: null, jumlahSurat: 0, totalSetoran: 0, jumlahKhatam: null };
+  }
   
   // Tasmi' otomatis: jika ada setoran surat di luar Juz 30
   const hasLuarJuz30 = setorans.some(s => {
@@ -8752,8 +8769,12 @@ function getSiswaTahfidhInfo(nama) {
   
   // Unique surat count
   const suratSet = new Set(setorans.map(s => s.surat).filter(Boolean));
-  
-  return { ket: bestKet, lastSurat, lastJuz, lastSuratNum, jumlahSurat: suratSet.size, totalSetoran: setorans.length, jumlahKhatam: bestJumlahKhatam };
+
+  // ── Terapkan statusTetap override jika diset (override ket saja, data lain tetap dihitung) ──
+  const finalKet = statusTetap || bestKet;
+  const finalJumlahKhatam = statusTetap ? null : bestJumlahKhatam;
+
+  return { ket: finalKet, lastSurat, lastJuz, lastSuratNum, jumlahSurat: suratSet.size, totalSetoran: setorans.length, jumlahKhatam: finalJumlahKhatam, isStatusTetap: !!statusTetap };
 }
 
 function getKetBadgeHTML(ket, jumlahKhatam) {
@@ -9279,6 +9300,20 @@ document.addEventListener('keydown', function(e) {
         <option value="lulus">Lulus</option>
         <option value="arsip">Arsip / Pindah</option>
       </select>
+    </div>
+    <div class="form-row" id="editSiswaStatusTetapRow">
+      <label>Status Tahfidh <span style="font-weight:400;color:var(--mut)">(opsional)</span></label>
+      <button type="button" class="csd-trigger" id="editSiswaStatusTetapTrigger" onclick="openCsd('editSiswaStatusTetap','Status Tahfidh')">
+        <span id="editSiswaStatusTetapLabel">— Otomatis —</span>
+        <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
+      </button>
+      <select id="editSiswaStatusTetap" style="display:none;">
+        <option value="">— Otomatis —</option>
+        <option value="Belum Khatam">📖 Belum Khatam</option>
+        <option value="Muroja'ah">🔁 Muroja'ah</option>
+        <option value="Tasmi'">🎤 Tasmi'</option>
+      </select>
+      <div style="font-size:var(--fxs);color:var(--mut);margin-top:4px;">Paksa status hafalan siswa ini. Biarkan Otomatis agar dihitung dari data setoran.</div>
     </div>
     <div class="edit-actions">
       <button class="btn bo" style="flex:1;" onclick="closeEditSiswa()">Batal</button>
