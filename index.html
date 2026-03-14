@@ -3124,6 +3124,10 @@ span > .fai, div > .fai { vertical-align: middle; }
   <div class="hdr-right">
     <span class="hdr-date" id="tglHdr">—</span>
     <button id="btnInstall" onclick="installApp()" style="display:none;">⬇ Pasang</button>
+    <button class="hdr-user" id="btnHdrUser" onclick="goPage(5)" style="display:none;">
+      <div class="hdr-avatar" id="hdrAvatar">👤</div>
+      <span id="hdrUserName">Akun</span>
+    </button>
   </div>
 </div>
 <div id="netDot" title="Online"></div>
@@ -4018,22 +4022,34 @@ async function lpLogout() {
 }
 
 function _updateHeaderUser(user) {
+  const btn    = document.getElementById('btnHdrUser');
+  const avatar = document.getElementById('hdrAvatar');
+  const name   = document.getElementById('hdrUserName');
   const sAvatar = document.getElementById('settingsAvatar');
   const sName   = document.getElementById('settingsUserName');
   const sEmail  = document.getElementById('settingsUserEmail');
 
-  if(!user) return;
+  if(!user) {
+    if(btn) btn.style.display = 'none';
+    return;
+  }
+  if(btn) btn.style.display = 'flex';
 
   const displayName = user.displayName || user.email.split('@')[0];
+  const firstName   = displayName.split(' ')[0];
 
-  if(sName)  sName.textContent  = displayName;
-  if(sEmail) sEmail.textContent = user.email;
+  if(name)  name.textContent  = firstName;
+  if(sName) sName.textContent = displayName;
+  if(sEmail)sEmail.textContent= user.email;
 
   if(user.photoURL) {
     const img = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    if(avatar)  avatar.innerHTML  = img;
     if(sAvatar) sAvatar.innerHTML = img;
   } else {
-    if(sAvatar) sAvatar.textContent = displayName.charAt(0).toUpperCase();
+    const ic = displayName.charAt(0).toUpperCase();
+    if(avatar)  avatar.textContent  = ic;
+    if(sAvatar) sAvatar.textContent = ic;
   }
 }
 
@@ -7041,7 +7057,8 @@ window.hapusSemuaSetoran = function(){
 
 function resetForm(){
   document.querySelectorAll('.cat-salah').forEach(x => x.checked = false);
-  document.getElementById('tambahan').value = ''; syncCsdTrigger('tambahan');
+  // Tambahan (status) TIDAK direset — tetap sampai diubah manual
+  // document.getElementById('tambahan').value = ''; syncCsdTrigger('tambahan');
   renderAyatGrid();
 }
 
