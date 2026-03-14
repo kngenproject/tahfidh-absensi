@@ -202,7 +202,7 @@ body {
   align-items:flex-end; 
   gap:3px; 
   flex-shrink:0;
-  max-width:130px;
+  max-width:150px;
 }
 .hdr-date { 
   font-size:10px; 
@@ -2505,7 +2505,7 @@ span > .fai, div > .fai { vertical-align: middle; }
 }
 .hdr-user span {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 80px;
+  max-width: 100px;
 }
 
 
@@ -4025,15 +4025,18 @@ function _updateHeaderUser(user) {
   const btn    = document.getElementById('btnHdrUser');
   const avatar = document.getElementById('hdrAvatar');
   const name   = document.getElementById('hdrUserName');
+  const date   = document.getElementById('tglHdr');
   const sAvatar = document.getElementById('settingsAvatar');
   const sName   = document.getElementById('settingsUserName');
   const sEmail  = document.getElementById('settingsUserEmail');
 
   if(!user) {
-    if(btn) btn.style.display = 'none';
+    if(btn)  btn.style.display  = 'none';
+    if(date) date.style.display = '';   // tampilkan tanggal kembali
     return;
   }
-  if(btn) btn.style.display = 'flex';
+  if(btn)  btn.style.display  = 'flex';
+  if(date) date.style.display = 'none'; // sembunyikan tanggal saat sudah login
 
   const displayName = user.displayName || user.email.split('@')[0];
   const firstName   = displayName.split(' ')[0];
