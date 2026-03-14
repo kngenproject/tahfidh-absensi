@@ -3869,6 +3869,22 @@ firebase.initializeApp(firebaseConfig);
 const fbDb   = firebase.firestore();
 const fbAuth = firebase.auth();
 
+// ── Isolasi data per akun: semua koleksi berada di bawah users/{uid}/ ──
+// Gunakan userCol('nama') sebagai pengganti userCol('nama')
+function userCol(name) {
+  if (!currentUser) throw new Error('userCol: belum login');
+  return fbDb.collection('users').doc(currentUser.uid).collection(name);
+}
+
+// ── Isolasi localStorage per akun: prefix semua key dengan uid ──
+const ls = {
+  _p() { return currentUser ? currentUser.uid + ':' : 'guest:'; },
+  get(key)      { return localStorage.getItem(this._p() + key); },
+  set(key, val) { localStorage.setItem(this._p() + key, val); },
+  remove(key)   { localStorage.removeItem(this._p() + key); },
+  keys()        { const p = this._p(); return Object.keys(localStorage).filter(k => k.startsWith(p)).map(k => k.slice(p.length)); }
+};
+
 // Google Auth Provider
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -4036,9 +4052,11 @@ fbAuth.onAuthStateChanged(async (user) => {
       await startApp();
     }
   } else {
-    // User logged out — show login
+    // User logged out — bersihkan data di memori agar tidak bocor ke akun berikutnya
     currentUser = null;
     window._appStarted = false;
+    masterSiswa = []; dataSetoran = []; dataAbsensi = [];
+    userPoints = {}; userStreaks = {}; _tambahanPerSiswa = {};
     _updateHeaderUser(null);
     if(loginPage) {
       loginPage.classList.remove('hide');
@@ -4055,22 +4073,35 @@ fbAuth.onAuthStateChanged(async (user) => {
 async function loadConfig() {
   // Coba baca doc config/app; jika tidak ada pakai localStorage
   try {
-    const snap = await fbDb.collection('config').doc('app').get({ source: 'server' });
+    const snap = await userCol('config').doc('app').get({ source: 'server' });
     tahunAjaranAktif = (snap.exists && snap.data().tahunAjaran)
       ? snap.data().tahunAjaran
-      : (localStorage.getItem('tahunAjaranAktif') || '');
+      : (ls.get('tahunAjaranAktif') || '');
   } catch(e) {
-    tahunAjaranAktif = localStorage.getItem('tahunAjaranAktif') || '';
+    tahunAjaranAktif = ls.get('tahunAjaranAktif') || '';
   }
-  localStorage.setItem('tahunAjaranAktif', tahunAjaranAktif);
+  ls.set('tahunAjaranAktif', tahunAjaranAktif);
 }
 
 async function startApp() {
+  // Muat data lokal dulu agar UI bisa render sementara menunggu Firestore
+  _loadLocalData();
   showSyncing();
   // loadConfig + fetchAllData sudah handle semua error & render UI
   await loadConfig();
   await fetchAllData();   // error-handling ada di dalam fetchAllData
   initAppUI();            // dispatch firebase-ready untuk init pelengkap
+}
+
+// Isi ulang variabel data dari ls (dipanggil setelah currentUser tersedia)
+function _loadLocalData() {
+  masterSiswa       = JSON.parse(ls.get('db_master_siswa') || '[]');
+  dataSetoran       = JSON.parse(ls.get('db_setoran') || '[]');
+  dataAbsensi       = JSON.parse(ls.get(`db_absensi_${_initTodayKey}`) || ls.get('db_absensi_harian') || '[]');
+  userPoints        = JSON.parse(ls.get('db_points') || '{}');
+  userStreaks        = JSON.parse(ls.get('db_streaks') || '{}');
+  lastActive        = ls.get('db_last_active') || new Date().toDateString();
+  _tambahanPerSiswa = JSON.parse(ls.get('_tambahanPerSiswa') || '{}');
 }
 
 // startApp dipanggil oleh onAuthStateChanged setelah user login
@@ -4128,17 +4159,17 @@ async function fetchAllData(){
 
   try {
     // Siswa — paksa dari server agar hapus di Firebase Console langsung terefleksi
-    const snapSiswa = await fbDb.collection('siswa').where('status','==','aktif').get(FROM_SERVER);
+    const snapSiswa = await userCol('siswa').where('status','==','aktif').get(FROM_SERVER);
     masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
 
     // Setoran
-    const snapSetoran = await fbDb.collection('setoran')
+    const snapSetoran = await userCol('setoran')
       .where('tahunAjaran','==', tahunAjaranAktif).get(FROM_SERVER);
     dataSetoran = _sortSetoran(snapSetoran.docs.map(d => ({ fbId: d.id, ...d.data() })));
 
     // Absensi hari ini
     const todayKey = _localDateKey();
-    const snapAbsen = await fbDb.collection('absensiHarian').doc(todayKey).get(FROM_SERVER);
+    const snapAbsen = await userCol('absensiHarian').doc(todayKey).get(FROM_SERVER);
     if(snapAbsen.exists){
       const d = snapAbsen.data();
       // Coba baca dari field 'data' (object by nama) dulu, lalu fallback ke 'siswa' (array)
@@ -4160,7 +4191,7 @@ async function fetchAllData(){
     }
 
     // Points
-    const snapPoints = await fbDb.collection('points').get(FROM_SERVER);
+    const snapPoints = await userCol('points').get(FROM_SERVER);
     userPoints = {}; userStreaks = {};
     snapPoints.docs.forEach(d => {
       userPoints[d.id] = d.data().total || 0;
@@ -4172,26 +4203,26 @@ async function fetchAllData(){
     showToast('Tidak bisa ke server, pakai data cache', 'warning', 3000);
     // Fallback ke cache Firestore offline (bukan localStorage)
     try {
-      const snapSiswa = await fbDb.collection('siswa').where('status','==','aktif').get({ source: 'cache' });
+      const snapSiswa = await userCol('siswa').where('status','==','aktif').get({ source: 'cache' });
       masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
-      const snapSetoran = await fbDb.collection('setoran').where('tahunAjaran','==', tahunAjaranAktif).get({ source: 'cache' });
+      const snapSetoran = await userCol('setoran').where('tahunAjaran','==', tahunAjaranAktif).get({ source: 'cache' });
       dataSetoran = _sortSetoran(snapSetoran.docs.map(d => ({ fbId: d.id, ...d.data() })));
-      const snapPoints = await fbDb.collection('points').get({ source: 'cache' });
+      const snapPoints = await userCol('points').get({ source: 'cache' });
       snapPoints.docs.forEach(d => {
         userPoints[d.id] = d.data().total || 0;
         userStreaks[d.id] = d.data().streak || 0;
       });
       // Load absensi hari ini dari cache per-tanggal (support offline multi-hari)
       const _todayCacheKey = _localDateKey();
-      const _absensiToday = localStorage.getItem(`db_absensi_${_todayCacheKey}`);
-      dataAbsensi = _absensiToday ? JSON.parse(_absensiToday) : JSON.parse(localStorage.getItem('db_absensi_harian') || '[]');
+      const _absensiToday = ls.get(`db_absensi_${_todayCacheKey}`);
+      dataAbsensi = _absensiToday ? JSON.parse(_absensiToday) : JSON.parse(ls.get('db_absensi_harian') || '[]');
     } catch(e2) {
       console.warn('[FB] Cache Firestore juga gagal, pakai localStorage:', e2);
-      masterSiswa  = JSON.parse(localStorage.getItem('db_master_siswa')||'[]');
-      dataSetoran  = JSON.parse(localStorage.getItem('db_setoran')||'[]');
-      dataAbsensi  = JSON.parse(localStorage.getItem('db_absensi_harian')||'[]');
-      userPoints   = JSON.parse(localStorage.getItem('db_points')||'{}');
-      userStreaks   = JSON.parse(localStorage.getItem('db_streaks')||'{}');
+      masterSiswa  = JSON.parse(ls.get('db_master_siswa')||'[]');
+      dataSetoran  = JSON.parse(ls.get('db_setoran')||'[]');
+      dataAbsensi  = JSON.parse(ls.get('db_absensi_harian')||'[]');
+      userPoints   = JSON.parse(ls.get('db_points')||'{}');
+      userStreaks   = JSON.parse(ls.get('db_streaks')||'{}');
     }
   }
 
@@ -4205,12 +4236,12 @@ async function fetchAllData(){
   renderTblSetoran && renderTblSetoran();
   updateDashboard && updateDashboard();
   _lastSyncAt = Date.now();
-  localStorage.setItem('_lastSyncAt', String(_lastSyncAt));
+  ls.set('_lastSyncAt', String(_lastSyncAt));
   // Bersihkan cache absensi per-tanggal yang sudah > 60 hari
   const _cutoff = new Date(); _cutoff.setDate(_cutoff.getDate() - 60);
   const _cutoffKey = _cutoff.toISOString().slice(0,10);
-  Object.keys(localStorage).filter(k => k.startsWith('db_absensi_') && k !== 'db_absensi_harian').forEach(k => {
-    if(k.replace('db_absensi_','') < _cutoffKey) localStorage.removeItem(k);
+  ls.keys().filter(k => k.startsWith('db_absensi_') && k !== 'db_absensi_harian').forEach(k => {
+    if(k.replace('db_absensi_','') < _cutoffKey) ls.remove(k);
   });
   showSyncDone();
 }
@@ -4224,15 +4255,16 @@ let _lastSyncAt = Date.now(); // timestamp saat terakhir fetch dari Firestore
 const _MIN_BG_MS = 30_000; // min waktu background (30 detik) sebelum re-fetch
 
 document.addEventListener('visibilitychange', () => {
+  if(!currentUser) return; // jangan simpan jika belum login
   if(document.visibilityState === 'hidden'){
     // ── TUTUP / BACKGROUND: simpan ke localStorage ──
     _hiddenAt = Date.now();
-    localStorage.setItem('db_setoran',          JSON.stringify(dataSetoran));
-    localStorage.setItem('db_absensi_harian',   JSON.stringify(dataAbsensi));
-    localStorage.setItem('db_master_siswa',     JSON.stringify(masterSiswa));
-    localStorage.setItem('db_points',           JSON.stringify(userPoints));
-    localStorage.setItem('db_streaks',          JSON.stringify(userStreaks));
-    localStorage.setItem('_lastSyncAt',         String(_lastSyncAt));
+    ls.set('db_setoran', JSON.stringify(dataSetoran));
+    ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
+    ls.set('db_master_siswa', JSON.stringify(masterSiswa));
+    ls.set('db_points', JSON.stringify(userPoints));
+    ls.set('db_streaks', JSON.stringify(userStreaks));
+    ls.set('_lastSyncAt', String(_lastSyncAt));
 
   } else if(document.visibilityState === 'visible'){
     // ── BUKA / KEMBALI KE FOREGROUND: re-fetch jika sudah lama di background ──
@@ -4244,7 +4276,7 @@ document.addEventListener('visibilitychange', () => {
       if(typeof fetchAllData === 'function'){
         fetchAllData().then(() => {
           _lastSyncAt = Date.now();
-          localStorage.setItem('_lastSyncAt', String(_lastSyncAt));
+          ls.set('_lastSyncAt', String(_lastSyncAt));
         });
       }
     }
@@ -4699,17 +4731,16 @@ function quickAction(){
 /* ==============================
    DATA GLOBAL
 ============================== */
-let masterSiswa = JSON.parse(localStorage.getItem('db_master_siswa')) || [];
-let dataSetoran = JSON.parse(localStorage.getItem('db_setoran')) || [];
+// Variabel data diinisialisasi kosong; diisi ulang dari ls setelah login di startApp()
+let masterSiswa = [];
+let dataSetoran = [];
 let vData = [], vFil = 'SEMUA', vCols = {};
-// Absensi: load dari cache per-tanggal hari ini jika ada (support offline multi-hari)
 const _initTodayKey = (()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
-let dataAbsensi = JSON.parse(localStorage.getItem(`db_absensi_${_initTodayKey}`) || localStorage.getItem('db_absensi_harian') || '[]');
-let userPoints = JSON.parse(localStorage.getItem('db_points')) || {};
-let userStreaks = JSON.parse(localStorage.getItem('db_streaks')) || {};
-let lastActive = localStorage.getItem('db_last_active') || new Date().toDateString();
-// Simpan nilai tambahan terakhir per siswa (persist via localStorage)
-let _tambahanPerSiswa = JSON.parse(localStorage.getItem('_tambahanPerSiswa') || '{}');
+let dataAbsensi = [];
+let userPoints = {};
+let userStreaks = {};
+let lastActive = new Date().toDateString();
+let _tambahanPerSiswa = {};
 
 function checkDailyStreak(){
   const today = new Date().toDateString();
@@ -4717,7 +4748,7 @@ function checkDailyStreak(){
   
   if(lastActive !== today && lastActive !== yesterday){
     Object.keys(userStreaks).forEach(user=>{ userStreaks[user] = 0; });
-    localStorage.setItem('db_streaks', JSON.stringify(userStreaks));
+    ls.set('db_streaks', JSON.stringify(userStreaks));
     showToast('Streak terputus! Ayo mulai lagi!','warning');
   }
 }
@@ -6352,7 +6383,7 @@ async function konfirmasiImport(){
     for(const chunk of chunks){
       const batch = fbDb.batch();
       chunk.forEach(s => {
-        const ref = fbDb.collection('siswa').doc();
+        const ref = userCol('siswa').doc();
         batch.set(ref, {
           nama: s.nama, kelas: s.kelas || 'Umum', status: 'aktif',
           tahunMasuk: tahunAjaranAktif,
@@ -6363,9 +6394,9 @@ async function konfirmasiImport(){
       await batch.commit();
     }
     // Refresh masterSiswa lokal langsung tanpa full fetch
-    const snapSiswa = await fbDb.collection('siswa').where('status','==','aktif').get();
+    const snapSiswa = await userCol('siswa').where('status','==','aktif').get();
     masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
-    localStorage.setItem('db_master_siswa', JSON.stringify(masterSiswa));
+    ls.set('db_master_siswa', JSON.stringify(masterSiswa));
     renderDdSiswa && renderDdSiswa();
     updateStrip && updateStrip();
     renderSiswaCards && renderSiswaCards();
@@ -6411,16 +6442,16 @@ async function simpanSiswaManual(){
     errEl.textContent = 'Siswa dengan nama ini sudah ada'; errEl.style.display = 'block'; return;
   }
   try {
-    await fbDb.collection('siswa').doc().set({
+    await userCol('siswa').doc().set({
       nama, kelas, status: 'aktif',
       tahunMasuk: tahunAjaranAktif,
       createdBy: currentUser.uid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     // Refresh masterSiswa lokal langsung
-    const snapSiswa = await fbDb.collection('siswa').where('status','==','aktif').get();
+    const snapSiswa = await userCol('siswa').where('status','==','aktif').get();
     masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
-    localStorage.setItem('db_master_siswa', JSON.stringify(masterSiswa));
+    ls.set('db_master_siswa', JSON.stringify(masterSiswa));
     renderDdSiswa && renderDdSiswa();
     updateStrip && updateStrip();
     renderSiswaCards && renderSiswaCards();
@@ -6639,7 +6670,7 @@ function simpanSetoran(){
   };
   // Optimistic local update
   dataSetoran.unshift(rec);
-  localStorage.setItem('db_setoran', JSON.stringify(dataSetoran));
+  ls.set('db_setoran', JSON.stringify(dataSetoran));
   // Update points locally — Tasmi' > Muroja'ah > Setoran biasa
   if(!userPoints[nama]) userPoints[nama] = 0;
   const _tierMult = tambahan === "Tasmi'" ? 2.0 : tambahan === "Muroja'ah" ? 1.5 : 1.0;
@@ -6649,21 +6680,21 @@ function simpanSetoran(){
     if(!userStreaks[nama]) userStreaks[nama] = 0;
     userStreaks[nama]++;
     lastActive = today;
-    localStorage.setItem('db_last_active', lastActive);
+    ls.set('db_last_active', lastActive);
   }
   // Write to Firestore
   const fbRec = { ...rec };
   delete fbRec.id; // use Firestore auto-id
   fbRec.inputAt = firebase.firestore.FieldValue.serverTimestamp();
-  fbDb.collection('setoran').add(fbRec).then(docRef => {
+  userCol('setoran').add(fbRec).then(docRef => {
     // Simpan fbId ke record lokal supaya delete bisa pakai fbId
     const localIdx = dataSetoran.findIndex(x => x.id === rec.id);
     if(localIdx >= 0) {
       dataSetoran[localIdx].fbId = docRef.id;
-      localStorage.setItem('db_setoran', JSON.stringify(dataSetoran));
+      ls.set('db_setoran', JSON.stringify(dataSetoran));
     }
     // Update points in Firestore
-    return fbDb.collection('points').doc(nama).set({
+    return userCol('points').doc(nama).set({
       total: userPoints[nama],
       streak: userStreaks[nama] || 0,
       lastActive: today
@@ -6672,7 +6703,7 @@ function simpanSetoran(){
   // Simpan nilai tambahan untuk siswa ini agar restore otomatis saat dipilih lagi
   if (nama && tambahan && tambahan !== '-') {
     _tambahanPerSiswa[nama] = tambahan;
-    localStorage.setItem('_tambahanPerSiswa', JSON.stringify(_tambahanPerSiswa));
+    ls.set('_tambahanPerSiswa', JSON.stringify(_tambahanPerSiswa));
   }
   // Hitung ulang streak dari data aktual
   recalcStreak(nama);
@@ -6699,7 +6730,7 @@ function recalcStreak(nama){
     else break;
   }
   userStreaks[nama] = streak;
-  localStorage.setItem('db_streaks', JSON.stringify(userStreaks));
+  ls.set('db_streaks', JSON.stringify(userStreaks));
 }
 
 // Hitung ulang streak semua siswa (dipanggil setelah fetch data)
@@ -6709,14 +6740,14 @@ function recalcAllStreaks(){
 
 function checkAchievements(nama){
   const nf = [nama];
-  const prev = JSON.parse(localStorage.getItem('unlockedBadges')||'[]');
+  const prev = JSON.parse(ls.get('unlockedBadges')||'[]');
   BADGES.forEach(b => {
     if (!prev.includes(b.id) && b.condition(nf)) {
       showAchievement(b.icon + ' ' + b.name, b.desc);
       prev.push(b.id);
     }
   });
-  localStorage.setItem('unlockedBadges', JSON.stringify(prev));
+  ls.set('unlockedBadges', JSON.stringify(prev));
 }
 
 // Konversi record setoran ke string tanggal YYYY-MM-DD
@@ -7004,12 +7035,12 @@ window.delSetoran = function(id, fbId){
   // Local update
   const targetId = fbId || id;
   dataSetoran = dataSetoran.filter(x => x.id != id && x.fbId != id);
-  localStorage.setItem('db_setoran', JSON.stringify(dataSetoran));
+  ls.set('db_setoran', JSON.stringify(dataSetoran));
   renderTblSetoran();
   // Firestore delete (use fbId if available)
   const docId = rec?.fbId;
   if(docId){
-    fbDb.collection('setoran').doc(docId).delete().catch(err => console.warn('[FB] delSetoran:', err));
+    userCol('setoran').doc(docId).delete().catch(err => console.warn('[FB] delSetoran:', err));
   }
   showToast('Data dihapus','success');
 };
@@ -7019,12 +7050,12 @@ window.hapusSemuaSetoran = function(){
   if(!confirm(`Hapus ${dataSetoran.length} riwayat setoran? Ini akan menghapus dari server juga!`)) return;
   // Delete all from Firestore
   const batch = fbDb.batch();
-  dataSetoran.forEach(s => { if(s.fbId) batch.delete(fbDb.collection('setoran').doc(s.fbId)); });
+  dataSetoran.forEach(s => { if(s.fbId) batch.delete(userCol('setoran').doc(s.fbId)); });
   batch.commit().then(() => {
     showToast('Semua riwayat dihapus dari server', 'success');
   }).catch(err => showToast('Error: ' + err.message, 'error'));
   dataSetoran = [];
-  localStorage.setItem('db_setoran', JSON.stringify(dataSetoran));
+  ls.set('db_setoran', JSON.stringify(dataSetoran));
   renderTblSetoran();
 };
 
@@ -7121,7 +7152,7 @@ function syncAbsensiWithMaster(){
   // Hapus siswa yang sudah tidak ada di master
   const masterNames = new Set(masterSiswa.map(s => s.nama));
   dataAbsensi = dataAbsensi.filter(a => masterNames.has(a.nama));
-  localStorage.setItem('db_absensi_harian', JSON.stringify(dataAbsensi));
+  ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
 }
 
 window.setStatusAbsen = function(btnOrNama, status){
@@ -7149,11 +7180,11 @@ window.setStatusAbsen = function(btnOrNama, status){
       inputByNama: currentGuru?.nama || 'Guru'
     });
   }
-  localStorage.setItem('db_absensi_harian', JSON.stringify(dataAbsensi));
+  ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
   // Simpan juga per-tanggal agar tidak hilang saat offline multi-hari
   const _todayKeyAbs = _localDateKey();
   if(_todayKeyAbs && dataAbsensi.length > 0){
-    localStorage.setItem(`db_absensi_${_todayKeyAbs}`, JSON.stringify(dataAbsensi));
+    ls.set(`db_absensi_${_todayKeyAbs}`, JSON.stringify(dataAbsensi));
   }
   renderSiswaCards();
   updateStatsAbsensi();
@@ -7163,7 +7194,7 @@ window.setStatusAbsen = function(btnOrNama, status){
   const todayKey = _localDateKey();
   const entry = { status, waktu: now, kelas: siswa?.kelas || 'Umum',
     inputBy: currentUser?.uid || 'offline', inputByNama: currentGuru?.nama || 'Guru' };
-  fbDb.collection('absensiHarian').doc(todayKey).set({
+  userCol('absensiHarian').doc(todayKey).set({
     [`data.${nama}`]: entry,
     tanggal: todayKey,
     tahunAjaran: tahunAjaranAktif,
@@ -7229,20 +7260,20 @@ async function simpanAbsensiHarian(){
     data: dataObj     // format object untuk fetchAllData
   };
   // Simpan ke localStorage dulu — langsung tanpa tunggu network
-  localStorage.setItem('db_absensi_harian', JSON.stringify(dataAbsensi));
-  localStorage.setItem(`db_absensi_${key}`, JSON.stringify(dataAbsensi)); // per-tanggal
+  ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
+  ls.set(`db_absensi_${key}`, JSON.stringify(dataAbsensi)); // per-tanggal
   const meta = { tanggal: key, tanggalStr: tglStr, total: masterSiswa.length, hadir, ijin, sakit, alpha };
-  let riwayat = JSON.parse(localStorage.getItem('cache_riwayat_absensi') || '[]');
+  let riwayat = JSON.parse(ls.get('cache_riwayat_absensi') || '[]');
   const idx = riwayat.findIndex(r => r.tanggal === key);
   if(idx >= 0) riwayat[idx] = meta; else riwayat.unshift(meta);
   riwayat.sort((a,b) => b.tanggal.localeCompare(a.tanggal));
-  localStorage.setItem('cache_riwayat_absensi', JSON.stringify(riwayat));
+  ls.set('cache_riwayat_absensi', JSON.stringify(riwayat));
 
   // Kirim ke Firestore (fire-and-forget)
   // Jika offline: Firestore antri → sinkron otomatis saat online kembali
   // Jika online: langsung tersimpan ke server
   const isOfflineNow = !navigator.onLine;
-  fbDb.collection('absensiHarian').doc(key).set(payload, { merge: true })
+  userCol('absensiHarian').doc(key).set(payload, { merge: true })
     .catch(err => console.warn('[FB] simpanAbsensiHarian:', err));
 
   const offlineNote = isOfflineNow ? ' (akan sinkron saat online)' : '';
@@ -7259,7 +7290,7 @@ async function bukaRiwayatAbsensi(){
   listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mut);">Memuat...</div>';
   try {
     // Ambil dari Firestore (max 60 dokumen, sort desc)
-    const snap = await fbDb.collection('absensiHarian').orderBy('tanggal','desc').limit(60).get();
+    const snap = await userCol('absensiHarian').orderBy('tanggal','desc').limit(60).get();
     if(snap.empty){
       listEl.innerHTML = '<div style="padding:30px;text-align:center;color:#bbb;">Belum ada riwayat absensi</div>';
       return;
@@ -7267,17 +7298,17 @@ async function bukaRiwayatAbsensi(){
     const rows = snap.docs.map(d => ({key: d.id, ...d.data()}));
     // Simpan ke cache
     const meta = rows.map(r => ({tanggal:r.tanggal, tanggalStr:r.tanggalStr||r.tanggal, total:r.total||0, hadir:r.hadir||0, ijin:r.ijin||0, sakit:r.sakit||0, alpha:r.alpha||0}));
-    localStorage.setItem('cache_riwayat_absensi', JSON.stringify(meta));
+    ls.set('cache_riwayat_absensi', JSON.stringify(meta));
     renderRiwayatList(rows);
   } catch(err){
     // Fallback ke cache lokal
-    const cached = JSON.parse(localStorage.getItem('cache_riwayat_absensi') || '[]');
+    const cached = JSON.parse(ls.get('cache_riwayat_absensi') || '[]');
     // Tambahkan hari-hari yang ada di per-date cache tapi belum masuk cache_riwayat_absensi
-    const allKeys = Object.keys(localStorage).filter(k => k.startsWith('db_absensi_') && k !== 'db_absensi_harian');
+    const allKeys = ls.keys().filter(k => k.startsWith('db_absensi_') && k !== 'db_absensi_harian');
     allKeys.forEach(k => {
       const tgl = k.replace('db_absensi_','');
       if(!cached.find(r => r.tanggal === tgl)){
-        const absenArr = JSON.parse(localStorage.getItem(k) || '[]');
+        const absenArr = JSON.parse(ls.get(k) || '[]');
         const hadir = absenArr.filter(a=>a.status==='Hadir').length;
         cached.push({ tanggal: tgl, tanggalStr: tgl, total: absenArr.length, hadir, ijin: absenArr.filter(a=>a.status==='Ijin').length, sakit: absenArr.filter(a=>a.status==='Sakit').length, alpha: absenArr.filter(a=>a.status==='Alpha').length });
       }
@@ -7325,7 +7356,7 @@ async function bukaDetailAbsensi(key){
   const tabelEl = document.getElementById('detailAbsensiTabel');
   tabelEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mut);">Memuat...</div>';
   try {
-    const doc = await fbDb.collection('absensiHarian').doc(key).get();
+    const doc = await userCol('absensiHarian').doc(key).get();
     if(!doc.exists){ tabelEl.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb;">Data tidak ditemukan</div>'; return; }
     _detailAbsensiData = doc.data();
     const d = _detailAbsensiData;
@@ -7424,15 +7455,15 @@ async function hapusAbsensiTanggal(){
   const label = d?.tanggalStr || _detailAbsensiKey;
   if(!confirm(`Hapus data absensi "${label}"?`)) return;
   try {
-    await fbDb.collection('absensiHarian').doc(_detailAbsensiKey).delete();
+    await userCol('absensiHarian').doc(_detailAbsensiKey).delete();
     // Update cache
-    let riwayat = JSON.parse(localStorage.getItem('cache_riwayat_absensi') || '[]');
+    let riwayat = JSON.parse(ls.get('cache_riwayat_absensi') || '[]');
     riwayat = riwayat.filter(r => r.tanggal !== _detailAbsensiKey);
-    localStorage.setItem('cache_riwayat_absensi', JSON.stringify(riwayat));
+    ls.set('cache_riwayat_absensi', JSON.stringify(riwayat));
     tutupDetailAbsensi();
     showToast('Data absensi dihapus', 'success');
     // Refresh riwayat list
-    const snap = await fbDb.collection('absensiHarian').orderBy('tanggal','desc').limit(60).get();
+    const snap = await userCol('absensiHarian').orderBy('tanggal','desc').limit(60).get();
     renderRiwayatList(snap.docs.map(d2 => ({key: d2.id, ...d2.data()})));
   } catch(err){
     showToast('Gagal hapus: ' + err.message, 'error');
@@ -7448,7 +7479,7 @@ function resetAbsensiHarian(){
     status: 'Hadir',
     waktu: now
   }));
-  localStorage.setItem('db_absensi_harian', JSON.stringify(dataAbsensi));
+  ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
   renderSiswaCards();
   updateStatsAbsensi();
   renderRiwAbsensi();
@@ -7672,13 +7703,13 @@ async function hapusSemuaDataSiswa(){
 
   try {
     // 1. Hapus semua dokumen siswa dari Firestore
-    const snapSiswa = await fbDb.collection('siswa').get();
+    const snapSiswa = await userCol('siswa').get();
     const batchSiswa = fbDb.batch();
     snapSiswa.docs.forEach(d => batchSiswa.delete(d.ref));
     if(snapSiswa.docs.length) await batchSiswa.commit();
 
     // 2. Hapus semua dokumen setoran dari Firestore
-    const snapSetoran = await fbDb.collection('setoran').get();
+    const snapSetoran = await userCol('setoran').get();
     const chunks = [];
     for(let i=0; i<snapSetoran.docs.length; i+=400) chunks.push(snapSetoran.docs.slice(i,i+400));
     for(const chunk of chunks){
@@ -7688,7 +7719,7 @@ async function hapusSemuaDataSiswa(){
     }
 
     // 3. Hapus semua dokumen absensi dari Firestore
-    const snapAbsen = await fbDb.collection('absensiHarian').get();
+    const snapAbsen = await userCol('absensiHarian').get();
     const chunksAbsen = [];
     for(let i=0; i<snapAbsen.docs.length; i+=400) chunksAbsen.push(snapAbsen.docs.slice(i,i+400));
     for(const chunk of chunksAbsen){
@@ -7698,7 +7729,7 @@ async function hapusSemuaDataSiswa(){
     }
 
     // 4. Hapus semua dokumen points dari Firestore
-    const snapPoints = await fbDb.collection('points').get();
+    const snapPoints = await userCol('points').get();
     const batchPts = fbDb.batch();
     snapPoints.docs.forEach(d => batchPts.delete(d.ref));
     if(snapPoints.docs.length) await batchPts.commit();
@@ -7711,11 +7742,11 @@ async function hapusSemuaDataSiswa(){
   // 5. Bersihkan semua localStorage
   masterSiswa = []; dataSetoran = []; dataAbsensi = []; userPoints = {}; userStreaks = {};
   activeDashboardSiswa = 'SEMUA';
-  localStorage.setItem('db_master_siswa', '[]');
-  localStorage.setItem('db_setoran', '[]');
-  localStorage.setItem('db_absensi_harian', '[]');
-  localStorage.setItem('db_points', '{}');
-  localStorage.setItem('db_streaks', '{}');
+  ls.set('db_master_siswa', '[]');
+  ls.set('db_setoran', '[]');
+  ls.set('db_absensi_harian', '[]');
+  ls.set('db_points', '{}');
+  ls.set('db_streaks', '{}');
 
   // 6. Clear Firestore offline cache (IndexedDB) & reload
   try {
@@ -8257,7 +8288,7 @@ async function simpanPencapaianAwal(){
 
   // Prepend to dataSetoran (optimistic local)
   dataSetoran = [...newRecords, ...dataSetoran];
-  localStorage.setItem('db_setoran', JSON.stringify(dataSetoran));
+  ls.set('db_setoran', JSON.stringify(dataSetoran));
 
   // Add points — tier pencapaian menentukan besar poin
   // Tasmi' > Muroja'ah > Belum Khatam, sesuai hierarki pencapaian
@@ -8267,7 +8298,7 @@ async function simpanPencapaianAwal(){
   const _bonus    = _PA_BONUS[mpaKetVal]    ?? 15;
   if(!userPoints[nama]) userPoints[nama] = 0;
   userPoints[nama] += toInsert.length * _perSurat + _bonus;
-  localStorage.setItem('db_points', JSON.stringify(userPoints));
+  ls.set('db_points', JSON.stringify(userPoints));
 
   // Write to Firestore
   const chunks = [];
@@ -8283,11 +8314,11 @@ async function simpanPencapaianAwal(){
         delete fbRec.id;
         // jumlahKhatam null → hapus dari dokumen agar tidak menyimpan null
         if(fbRec.jumlahKhatam === null) delete fbRec.jumlahKhatam;
-        batch.set(fbDb.collection('setoran').doc(), fbRec);
+        batch.set(userCol('setoran').doc(), fbRec);
       });
       await batch.commit();
     }
-    await fbDb.collection('points').doc(nama).set({
+    await userCol('points').doc(nama).set({
       total: userPoints[nama], streak: userStreaks[nama]||0
     }, { merge: true });
   })().catch(err => console.warn('[FB] simpanPencapaianAwal:', err));
@@ -8343,11 +8374,11 @@ async function simpanEditSiswa(){
     } else {
       updateData.statusTetap = firebase.firestore.FieldValue.delete();
     }
-    await fbDb.collection('siswa').doc(id).update(updateData);
+    await userCol('siswa').doc(id).update(updateData);
     // Refresh lokal
-    const snapSiswa = await fbDb.collection('siswa').where('status','==','aktif').get();
+    const snapSiswa = await userCol('siswa').where('status','==','aktif').get();
     masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
-    localStorage.setItem('db_master_siswa', JSON.stringify(masterSiswa));
+    ls.set('db_master_siswa', JSON.stringify(masterSiswa));
     renderDdSiswa && renderDdSiswa();
     updateStrip && updateStrip();
     renderSiswaCards && renderSiswaCards();
@@ -8362,11 +8393,11 @@ async function simpanEditSiswa(){
 async function sinkronisasiUlang(){
   showToast('⏳ Mengambil data terbaru dari server...', 'warning', 5000);
   // Reset cache localStorage dulu
-  localStorage.setItem('db_master_siswa', '[]');
-  localStorage.setItem('db_setoran', '[]');
-  localStorage.setItem('db_absensi_harian', '[]');
-  localStorage.setItem('db_points', '{}');
-  localStorage.setItem('db_streaks', '{}');
+  ls.set('db_master_siswa', '[]');
+  ls.set('db_setoran', '[]');
+  ls.set('db_absensi_harian', '[]');
+  ls.set('db_points', '{}');
+  ls.set('db_streaks', '{}');
   masterSiswa = []; dataSetoran = []; dataAbsensi = []; userPoints = {}; userStreaks = {};
   try {
     await fetchAllData();
@@ -8379,11 +8410,11 @@ async function sinkronisasiUlang(){
 // ── Bersihkan SEMUA cache lokal (tanpa hapus Firestore) ──────────
 async function bersihkanCacheLokal(){
   if(!confirm('Bersihkan semua cache lokal?\n\nData di Firebase tidak akan terhapus. Halaman akan dimuat ulang setelah ini.')) return;
-  localStorage.removeItem('db_master_siswa');
-  localStorage.removeItem('db_setoran');
-  localStorage.removeItem('db_absensi_harian');
-  localStorage.removeItem('db_points');
-  localStorage.removeItem('db_streaks');
+  ls.remove('db_master_siswa');
+  ls.remove('db_setoran');
+  ls.remove('db_absensi_harian');
+  ls.remove('db_points');
+  ls.remove('db_streaks');
   try { await fbDb.clearPersistence(); } catch(e) {}
   showToast('✅ Cache lokal dibersihkan. Memuat ulang...', 'success', 2000);
   setTimeout(() => location.reload(), 2000);
@@ -8394,9 +8425,9 @@ window.hapusSiswa = async function(fbId){
   if(!s) return;
   if(!confirm(`Hapus siswa "${s.nama}"? Data setoran terkait tidak akan ikut dihapus.`)) return;
   try {
-    await fbDb.collection('siswa').doc(fbId).update({ status: 'arsip' });
+    await userCol('siswa').doc(fbId).update({ status: 'arsip' });
     masterSiswa = masterSiswa.filter(x => x.fbId !== fbId);
-    localStorage.setItem('db_master_siswa', JSON.stringify(masterSiswa));
+    ls.set('db_master_siswa', JSON.stringify(masterSiswa));
     renderDdSiswa && renderDdSiswa();
     updateStrip && updateStrip();
     renderSiswaCards && renderSiswaCards();
