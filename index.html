@@ -16,6 +16,7 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <style>
 /* ==============================
    RESET & BASE (CRITICAL FIXES)
@@ -2374,6 +2375,108 @@ span > .fai, div > .fai { vertical-align: middle; }
 
 
 
+/* ==============================
+   LOGIN PAGE
+============================== */
+#loginPage {
+  position: fixed; inset: 0; z-index: 99999;
+  background: linear-gradient(160deg, #0c4a2a 0%, #1a7040 50%, #0c4a2a 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+#loginPage.hide { display: none; }
+.lp-box {
+  background: #fff; border-radius: 20px; padding: 28px 22px;
+  width: 100%; max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.lp-logo {
+  text-align: center; margin-bottom: 20px;
+}
+.lp-logo-ico {
+  width: 68px; height: 68px; border-radius: 16px;
+  background: linear-gradient(135deg, #0c4a2a, #2da55f);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin: 0 auto 12px;
+  box-shadow: 0 6px 20px rgba(12,74,42,.3);
+}
+.lp-logo h1 {
+  font-size: 1.3rem; font-weight: 900; color: #0c4a2a; margin-bottom: 3px;
+}
+.lp-logo p { font-size: .75rem; color: #6b7c72; }
+.lp-tabs {
+  display: flex; gap: 0; margin-bottom: 20px;
+  background: #eef2f0; border-radius: 10px; padding: 3px;
+}
+.lp-tab {
+  flex: 1; padding: 8px; border: none; background: none; border-radius: 8px;
+  font-size: .8rem; font-weight: 700; cursor: pointer; color: #6b7c72;
+  transition: all .2s;
+}
+.lp-tab.on { background: #fff; color: #0c4a2a; box-shadow: 0 2px 6px rgba(0,0,0,.1); }
+.lp-field {
+  margin-bottom: 13px;
+}
+.lp-field label {
+  display: block; font-size: .75rem; font-weight: 700; color: #6b7c72; margin-bottom: 5px;
+}
+.lp-field input {
+  width: 100%; padding: 11px 13px; border: 1.5px solid #dde8e2;
+  border-radius: 10px; font-size: .88rem; color: #1a2e22;
+  background: #f7faf8; outline: none; transition: border-color .2s;
+}
+.lp-field input:focus { border-color: #2da55f; background: #fff; }
+.lp-err {
+  font-size: .75rem; color: #e53935; margin-top: -6px; margin-bottom: 10px;
+  min-height: 16px; display: none;
+}
+.lp-err.show { display: block; }
+.lp-btn {
+  width: 100%; padding: 12px; border: none; border-radius: 11px;
+  font-size: .9rem; font-weight: 800; cursor: pointer;
+  transition: all .15s; margin-bottom: 10px;
+}
+.lp-btn-primary {
+  background: linear-gradient(135deg, #145c35, #2da55f);
+  color: #fff; box-shadow: 0 4px 12px rgba(12,74,42,.3);
+}
+.lp-btn-primary:active { transform: scale(.98); }
+.lp-btn-google {
+  background: #fff; color: #1a2e22;
+  border: 1.5px solid #dde8e2 !important;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.lp-btn-google:active { background: #f7faf8; }
+.lp-divider {
+  display: flex; align-items: center; gap: 10px; margin: 14px 0;
+  font-size: .75rem; color: #6b7c72;
+}
+.lp-divider::before, .lp-divider::after {
+  content: ''; flex: 1; height: 1px; background: #dde8e2;
+}
+.lp-loading {
+  display: none; text-align: center; padding: 16px;
+  font-size: .82rem; color: #6b7c72;
+}
+.lp-loading.show { display: block; }
+/* spinner */
+.lp-spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid #dde8e2; border-top-color: #2da55f;
+  animation: lpSpin .7s linear infinite;
+  margin: 0 auto 8px;
+}
+@keyframes lpSpin { to { transform: rotate(360deg); } }
+.lp-forgot {
+  text-align: center; font-size: .75rem; color: #2da55f;
+  cursor: pointer; text-decoration: underline; margin-top: 4px;
+  background: none; border: none; width: 100%;
+}
+
+/* Google icon SVG inline */
+.google-ico { width: 18px; height: 18px; flex-shrink: 0; }
+
 /* ── Sync indicator ── */
 #syncStatus {
   display: none; position: fixed; bottom: calc(var(--NAV) + env(safe-area-inset-bottom, 0px) + 8px);
@@ -2935,6 +3038,81 @@ span > .fai, div > .fai { vertical-align: middle; }
 
 
 <!-- Header -->
+<!-- ════════ LOGIN PAGE ════════ -->
+<div id="loginPage">
+  <div class="lp-box">
+    <div class="lp-logo">
+      <div class="lp-logo-ico">📖</div>
+      <h1>TAMMA</h1>
+      <p>Tahfidh Juz Amma &amp; Absensi Siswa</p>
+    </div>
+
+    <!-- Loading state -->
+    <div class="lp-loading" id="lpLoading">
+      <div class="lp-spinner"></div>
+      Memverifikasi akun...
+    </div>
+
+    <!-- Tab: Masuk / Daftar -->
+    <div id="lpForms">
+      <div class="lp-tabs">
+        <button class="lp-tab on" id="lpTabMasuk" onclick="lpSwitchTab('masuk')">Masuk</button>
+        <button class="lp-tab" id="lpTabDaftar" onclick="lpSwitchTab('daftar')">Daftar</button>
+      </div>
+
+      <!-- ── Masuk dengan Google ── -->
+      <button class="lp-btn lp-btn-google" onclick="lpGoogleLogin()">
+        <svg class="google-ico" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.5 0 6.5 1.2 8.9 3.2l6.6-6.6C35.5 2.5 30.1 0 24 0 14.8 0 6.9 5.4 3 13.3l7.7 6C12.7 13.1 17.9 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 6.9-10.1 6.9-17z"/>
+          <path fill="#FBBC05" d="M10.7 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7L2.6 13.3A23.9 23.9 0 0 0 0 24c0 3.8.9 7.5 2.6 10.7l8.1-6z"/>
+          <path fill="#34A853" d="M24 48c6.1 0 11.2-2 14.9-5.4l-7.5-5.8c-2 1.4-4.6 2.2-7.4 2.2-6.1 0-11.3-3.6-13.3-8.8l-7.7 6C6.9 42.6 14.8 48 24 48z"/>
+        </svg>
+        Masuk dengan Google
+      </button>
+
+      <div class="lp-divider">atau</div>
+
+      <!-- ── Form Masuk (email) ── -->
+      <div id="lpFormMasuk">
+        <div class="lp-field">
+          <label>Email</label>
+          <input type="email" id="lpEmail" placeholder="guru@sekolah.com" autocomplete="email">
+        </div>
+        <div class="lp-field">
+          <label>Password</label>
+          <input type="password" id="lpPass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="lp-err" id="lpErrMasuk"></div>
+        <button class="lp-btn lp-btn-primary" onclick="lpEmailLogin()">Masuk</button>
+        <button class="lp-forgot" onclick="lpForgotPassword()">Lupa password?</button>
+      </div>
+
+      <!-- ── Form Daftar (email) ── -->
+      <div id="lpFormDaftar" style="display:none;">
+        <div class="lp-field">
+          <label>Nama Lengkap</label>
+          <input type="text" id="lpNama" placeholder="Nama Anda" autocomplete="name">
+        </div>
+        <div class="lp-field">
+          <label>Email</label>
+          <input type="email" id="lpEmailDaftar" placeholder="guru@sekolah.com" autocomplete="email">
+        </div>
+        <div class="lp-field">
+          <label>Password</label>
+          <input type="password" id="lpPassDaftar" placeholder="Min. 6 karakter" autocomplete="new-password">
+        </div>
+        <div class="lp-err" id="lpErrDaftar"></div>
+        <button class="lp-btn lp-btn-primary" onclick="lpRegister()">Buat Akun</button>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:16px; font-size:.7rem; color:#6b7c72; line-height:1.5;">
+      Dengan masuk, Anda menyetujui penggunaan data<br>untuk keperluan manajemen tahfidh sekolah.
+    </div>
+  </div>
+</div>
+
 <div class="hdr">
   <div class="hdr-left">
     <div class="hdr-ico">📖</div>
@@ -2946,6 +3124,10 @@ span > .fai, div > .fai { vertical-align: middle; }
   <div class="hdr-right">
     <span class="hdr-date" id="tglHdr">—</span>
     <button id="btnInstall" onclick="installApp()" style="display:none;">⬇ Pasang</button>
+    <button class="hdr-user" id="btnHdrUser" onclick="goPage(5)" style="display:none;">
+      <div class="hdr-avatar" id="hdrAvatar">👤</div>
+      <span id="hdrUserName">Akun</span>
+    </button>
   </div>
 </div>
 <div id="netDot" title="Online"></div>
@@ -3606,6 +3788,23 @@ span > .fai, div > .fai { vertical-align: middle; }
         </div>
       </div>
 
+      <div class="card" id="cardAkun">
+        <div class="chd">👤 Akun Saya</div>
+        <div class="cbd">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+            <div id="settingsAvatar" style="width:46px;height:46px;border-radius:50%;background:var(--g4);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;overflow:hidden;">👤</div>
+            <div style="flex:1;min-width:0;">
+              <div id="settingsUserName" style="font-weight:800;font-size:var(--fmd);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+              <div id="settingsUserEmail" style="font-size:var(--fsm);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+            </div>
+          </div>
+          <button class="btn bd bsm" style="width:100%;" onclick="lpLogout()">
+            <svg class="fai" viewBox="0 0 512 512" aria-hidden="true"><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"/></svg>
+            Keluar (Logout)
+          </button>
+        </div>
+      </div>
+
       <div class="ab-foot">
         Data disimpan di Firebase Firestore &amp; cache lokal perangkat.<br><br>
         <strong style="color:var(--g7)">TAMMA</strong> — Tahfidh & Absensi
@@ -3688,11 +3887,15 @@ const firebaseConfig = {
   appId: "1:602276018828:web:7ba0db5549a3f58cbe59a9"
 };
 
-// Admin Google UID yang di-hardcode sebagai bootstrap admin pertama
-const BOOTSTRAP_ADMIN_EMAIL = null; // set ke email admin jika perlu
+const BOOTSTRAP_ADMIN_EMAIL = null;
 
 firebase.initializeApp(firebaseConfig);
-const fbDb = firebase.firestore();
+const fbDb   = firebase.firestore();
+const fbAuth = firebase.auth();
+
+// Google Auth Provider
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // Enable offline persistence
 fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
@@ -3700,16 +3903,13 @@ fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
   else if(err.code === 'unimplemented') console.warn('[FB] Browser tidak support persistence');
 });
 
-// Mode tanpa autentikasi — langsung masuk sebagai Admin
-let currentUser   = { uid: 'local-user', email: 'admin@tamma.app', isAnonymous: false };
+// Global user state
+let currentUser   = null;
 let currentGuru   = { nama: 'Admin', username: 'admin', role: 'admin', status: 'aktif', kelasDiajar: [] };
-let isAdmin = true; // mode tanpa login = selalu admin
+let isAdmin = true;
 let tahunAjaranAktif = '';
 let fbListeners   = [];
 
-// ─── Deklarasi global state kelas filter & handler registry ───
-// PENTING: harus di-declare di sini (sebelum semua fungsi yang menggunakannya)
-// agar tidak terkena Temporal Dead Zone (TDZ) error saat script dijalankan.
 const _kelasHandlers = {};
 let activeDashboardSiswa  = 'SEMUA';
 let activeDashboardKelas  = 'SEMUA';
@@ -3718,7 +3918,173 @@ let activeKelasAbsen      = 'SEMUA';
 let activeKelasViewer     = 'SEMUA';
 let activeKelasMpa        = 'SEMUA';
 
-// ─── Kredensial admin (hardcode) ───────────────────────────────
+/* ── Login Page Logic ── */
+function lpSwitchTab(tab) {
+  const isMasuk = tab === 'masuk';
+  document.getElementById('lpTabMasuk').classList.toggle('on', isMasuk);
+  document.getElementById('lpTabDaftar').classList.toggle('on', !isMasuk);
+  document.getElementById('lpFormMasuk').style.display  = isMasuk ? '' : 'none';
+  document.getElementById('lpFormDaftar').style.display = isMasuk ? 'none' : '';
+  lpClearErr();
+}
+
+function lpClearErr() {
+  ['lpErrMasuk','lpErrDaftar'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el){ el.textContent = ''; el.classList.remove('show'); }
+  });
+}
+
+function lpShowErr(elId, msg) {
+  const el = document.getElementById(elId);
+  if(el){ el.textContent = msg; el.classList.add('show'); }
+}
+
+function lpSetLoading(on) {
+  document.getElementById('lpLoading').classList.toggle('show', on);
+  document.getElementById('lpForms').style.display = on ? 'none' : '';
+}
+
+function _lpFirebaseErrMsg(code) {
+  const map = {
+    'auth/user-not-found'       : 'Email tidak terdaftar.',
+    'auth/wrong-password'       : 'Password salah.',
+    'auth/invalid-email'        : 'Format email tidak valid.',
+    'auth/email-already-in-use' : 'Email sudah terdaftar.',
+    'auth/weak-password'        : 'Password minimal 6 karakter.',
+    'auth/too-many-requests'    : 'Terlalu banyak percobaan. Coba lagi nanti.',
+    'auth/network-request-failed': 'Tidak ada koneksi internet.',
+    'auth/popup-closed-by-user' : 'Login dibatalkan.',
+    'auth/invalid-credential'   : 'Email atau password salah.',
+  };
+  return map[code] || 'Terjadi kesalahan. Silakan coba lagi.';
+}
+
+async function lpGoogleLogin() {
+  lpClearErr();
+  lpSetLoading(true);
+  try {
+    await fbAuth.signInWithPopup(googleProvider);
+    // onAuthStateChanged will handle the rest
+  } catch(e) {
+    lpSetLoading(false);
+    lpShowErr('lpErrMasuk', _lpFirebaseErrMsg(e.code));
+  }
+}
+
+async function lpEmailLogin() {
+  lpClearErr();
+  const email = document.getElementById('lpEmail').value.trim();
+  const pass  = document.getElementById('lpPass').value;
+  if(!email || !pass) return lpShowErr('lpErrMasuk', 'Email dan password harus diisi.');
+  lpSetLoading(true);
+  try {
+    await fbAuth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    lpSetLoading(false);
+    lpShowErr('lpErrMasuk', _lpFirebaseErrMsg(e.code));
+  }
+}
+
+async function lpRegister() {
+  lpClearErr();
+  const nama  = document.getElementById('lpNama').value.trim();
+  const email = document.getElementById('lpEmailDaftar').value.trim();
+  const pass  = document.getElementById('lpPassDaftar').value;
+  if(!nama)  return lpShowErr('lpErrDaftar', 'Nama harus diisi.');
+  if(!email) return lpShowErr('lpErrDaftar', 'Email harus diisi.');
+  if(!pass)  return lpShowErr('lpErrDaftar', 'Password harus diisi.');
+  lpSetLoading(true);
+  try {
+    const cred = await fbAuth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: nama });
+  } catch(e) {
+    lpSetLoading(false);
+    lpShowErr('lpErrDaftar', _lpFirebaseErrMsg(e.code));
+  }
+}
+
+async function lpForgotPassword() {
+  const email = document.getElementById('lpEmail').value.trim();
+  if(!email) return lpShowErr('lpErrMasuk', 'Isi email dulu untuk reset password.');
+  try {
+    await fbAuth.sendPasswordResetEmail(email);
+    lpShowErr('lpErrMasuk', '✅ Email reset password telah dikirim!');
+    document.getElementById('lpErrMasuk').style.color = '#2da55f';
+  } catch(e) {
+    lpShowErr('lpErrMasuk', _lpFirebaseErrMsg(e.code));
+  }
+}
+
+async function lpLogout() {
+  if(!confirm('Yakin ingin keluar?')) return;
+  await fbAuth.signOut();
+}
+
+function _updateHeaderUser(user) {
+  const btn    = document.getElementById('btnHdrUser');
+  const avatar = document.getElementById('hdrAvatar');
+  const name   = document.getElementById('hdrUserName');
+  const sAvatar = document.getElementById('settingsAvatar');
+  const sName   = document.getElementById('settingsUserName');
+  const sEmail  = document.getElementById('settingsUserEmail');
+
+  if(!user) {
+    if(btn) btn.style.display = 'none';
+    return;
+  }
+  if(btn) btn.style.display = 'flex';
+
+  const displayName = user.displayName || user.email.split('@')[0];
+  const firstName   = displayName.split(' ')[0];
+
+  if(name)  name.textContent  = firstName;
+  if(sName) sName.textContent = displayName;
+  if(sEmail)sEmail.textContent= user.email;
+
+  if(user.photoURL) {
+    const img = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    if(avatar)  avatar.innerHTML  = img;
+    if(sAvatar) sAvatar.innerHTML = img;
+  } else {
+    const ic = displayName.charAt(0).toUpperCase();
+    if(avatar)  avatar.textContent  = ic;
+    if(sAvatar) sAvatar.textContent = ic;
+  }
+}
+
+/* ── Auth State Changed ── */
+fbAuth.onAuthStateChanged(async (user) => {
+  const loginPage = document.getElementById('loginPage');
+  if(user) {
+    // User logged in
+    currentUser = { uid: user.uid, email: user.email, displayName: user.displayName, isAnonymous: false };
+    currentGuru = { nama: user.displayName || user.email, username: user.email, role: 'admin', status: 'aktif', kelasDiajar: [] };
+    isAdmin = true;
+
+    _updateHeaderUser(user);
+    if(loginPage) loginPage.classList.add('hide');
+
+    // Start app only if not yet started
+    if(!window._appStarted) {
+      window._appStarted = true;
+      await startApp();
+    }
+  } else {
+    // User logged out — show login
+    currentUser = null;
+    window._appStarted = false;
+    _updateHeaderUser(null);
+    if(loginPage) {
+      loginPage.classList.remove('hide');
+      // Reset form
+      lpSetLoading(false);
+      lpSwitchTab('masuk');
+      lpClearErr();
+    }
+  }
+});
+
 
 // Muat konfigurasi tahun ajaran dari Firestore (atau localStorage sebagai fallback)
 async function loadConfig() {
@@ -3742,12 +4108,9 @@ async function startApp() {
   initAppUI();            // dispatch firebase-ready untuk init pelengkap
 }
 
-// Tunda startApp sampai DOM siap agar showSyncing() bisa akses elemen
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startApp);
-} else {
-  startApp();
-}
+// startApp dipanggil oleh onAuthStateChanged setelah user login
+// (bukan lagi auto-start saat DOM ready)
+
 
 
 
