@@ -7340,7 +7340,7 @@ function _rebuildPersonalSiswaSelect() {
     ? masterF
     : masterF.filter(s => (s.kelas || 'Umum').trim() === activeKelasPersonal))
     .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
-  sel.innerHTML = '<option value="SEMUA">— Semua Siswa —</option>';
+  sel.innerHTML = '<option value="SEMUA">— Pilih Siswa —</option>';
   daftarSiswa.forEach((s, i) => {
     const opt = document.createElement('option');
     opt.value = s.nama;
