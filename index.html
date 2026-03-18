@@ -8019,11 +8019,67 @@ function exportSetoranTanggalPerKelas(){
   showToast(`${kelasUnik.length} sheet diunduh`,'success');
 }
 
+// Timer undo hapus setoran — dibatalkan jika user tekan Batalkan
+let _undoDelTimer = null;
+let _undoDelPending = null; // { records, fbIds, isDataAwal }
+
+function _showUndoToast(msg, onConfirm, duration=6000){
+  if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+  const toast = document.getElementById('toast');
+  toast.innerHTML = `<svg class="fai" viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>
+    ${msg}
+    <button onclick="_undoDelSetoran()" style="margin-left:8px;background:rgba(255,255,255,.25);border:1.5px solid rgba(255,255,255,.5);color:#fff;padding:3px 10px;border-radius:20px;font-size:var(--fsm);font-weight:700;cursor:pointer;white-space:nowrap;">↩ Batalkan</button>`;
+  toast.className = 'toast warning';
+  toast.classList.add('show');
+  _toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+    _toastTimer = null;
+    // Waktu habis — commit delete ke Firestore
+    if(_undoDelPending) _commitDelSetoran();
+  }, duration);
+}
+
+function _commitDelSetoran(){
+  if(!_undoDelPending) return;
+  const { fbIds, isDataAwal } = _undoDelPending;
+  _undoDelPending = null;
+  if(!fbIds.length) return;
+  if(isDataAwal){
+    (async()=>{
+      const chunks = [];
+      for(let i=0;i<fbIds.length;i+=400) chunks.push(fbIds.slice(i,i+400));
+      for(const chunk of chunks){
+        const fb = fbDb.batch();
+        chunk.forEach(fid => fb.delete(schoolCol('setoran').doc(fid)));
+        await fb.commit();
+      }
+    })().catch(err => console.warn('[FB] delDataAwalBatch:', err));
+  } else {
+    fbIds.forEach(fid => schoolCol('setoran').doc(fid).delete().catch(err => console.warn('[FB] delSetoran:', err)));
+  }
+}
+
+function _undoDelSetoran(){
+  // Batalkan timer & commit
+  if(_toastTimer){ clearTimeout(_toastTimer); _toastTimer = null; }
+  if(!_undoDelPending){ showToast('Tidak ada yang dibatalkan','warning'); return; }
+  // Kembalikan records ke dataSetoran
+  dataSetoran = [..._undoDelPending.records, ...dataSetoran];
+  ls.set('db_setoran', JSON.stringify(dataSetoran));
+  _undoDelPending = null;
+  renderTblSetoran();
+  showToast('✅ Penghapusan dibatalkan','success');
+}
+
 window.delSetoran = function(id, fbId){
   const rec = dataSetoran.find(x => x.id == id || x.fbId == id);
   if(rec && !isAdmin && rec.inputBy && rec.inputBy !== 'offline' && rec.inputBy !== currentUser?.uid){
     showToast('Anda hanya bisa menghapus input Anda sendiri', 'warning'); return;
   }
+
+  // Jika ada undo pending sebelumnya → commit dulu ke Firestore sebelum hapus baru
+  if(_undoDelPending){ _commitDelSetoran(); }
+  if(_undoDelTimer){ clearTimeout(_undoDelTimer); _undoDelTimer = null; }
 
   // Jika record adalah bagian dari batch data awal, hapus seluruh batch
   if(rec?.arahHafalan){
@@ -8035,38 +8091,26 @@ window.delSetoran = function(id, fbId){
     const n = batch.length;
     if(!confirm(`Hapus data awal ${rec.nama} (${n} surat)?`)) return;
     const batchFbIds = batch.map(x => x.fbId).filter(Boolean);
-    // Local update — hapus semua record batch
     const batchIds = new Set(batch.map(x => x.id));
     const batchFbSet = new Set(batchFbIds);
+    // Simpan untuk undo
+    _undoDelPending = { records: batch, fbIds: batchFbIds, isDataAwal: true };
+    // Hapus lokal dulu
     dataSetoran = dataSetoran.filter(x => !batchIds.has(x.id) && !batchFbSet.has(x.fbId));
     ls.set('db_setoran', JSON.stringify(dataSetoran));
     renderTblSetoran();
-    // Firestore batch delete
-    if(batchFbIds.length){
-      (async()=>{
-        const chunks = [];
-        for(let i=0; i<batchFbIds.length; i+=400) chunks.push(batchFbIds.slice(i,i+400));
-        for(const chunk of chunks){
-          const fb = fbDb.batch();
-          chunk.forEach(fid => fb.delete(schoolCol('setoran').doc(fid)));
-          await fb.commit();
-        }
-      })().catch(err => console.warn('[FB] delDataAwalBatch:', err));
-    }
-    showToast(`Data awal ${rec.nama} dihapus (${n} surat)`, 'success');
+    _showUndoToast(`Data awal ${rec.nama} dihapus (${n} surat)`);
     return;
   }
 
   // Setoran biasa — hapus 1 record
   if(!confirm('Hapus data ini?')) return;
+  const fbIds = rec?.fbId ? [rec.fbId] : [];
+  _undoDelPending = { records: [rec], fbIds, isDataAwal: false };
   dataSetoran = dataSetoran.filter(x => x.id != id && x.fbId != id);
   ls.set('db_setoran', JSON.stringify(dataSetoran));
   renderTblSetoran();
-  const docId = rec?.fbId;
-  if(docId){
-    schoolCol('setoran').doc(docId).delete().catch(err => console.warn('[FB] delSetoran:', err));
-  }
-  showToast('Data dihapus','success');
+  _showUndoToast(`Setoran ${rec?.surat||''} dihapus`);
 };
 
 window.hapusSemuaSetoran = function(){
