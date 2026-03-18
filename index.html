@@ -8827,7 +8827,15 @@ function switchMpaTab(mode){
   document.getElementById('mpaTabManual').classList.toggle('on', mode==='manual');
   document.getElementById('mpaCepatPanel').style.display = mode==='cepat' ? 'block' : 'none';
   document.getElementById('mpaManualPanel').style.display = mode==='manual' ? 'block' : 'none';
-  if(mode === 'manual') renderMpaJuzChips();
+  const khatamRow = document.getElementById('mpaJumlahKhatamRow');
+  if(mode === 'manual'){
+    renderMpaJuzChips();
+    buildSuratCheckGrid();
+    if(khatamRow) khatamRow.style.display = 'none';
+  } else {
+    // Kembalikan visibility khatam row sesuai arah saat ini
+    if(khatamRow) khatamRow.style.display = (mpaArah === 'naba-nas') ? 'block' : 'none';
+  }
   updateMpaCount();
 }
 
@@ -9067,9 +9075,9 @@ function setMpaArah(arah){
   document.getElementById('mpaAyatHelper').style.display = 'none';
   document.getElementById('mpaAyatSampai').innerHTML = '<option value="">Ayat</option>';
   syncCsdTrigger('mpaAyatSampai');
-  // Tampilkan jumlah khatam hanya saat Muroja'ah (naba-nas)
+  // Tampilkan jumlah khatam hanya saat Muroja'ah (naba-nas) dan mode cepat
   const khatamRow = document.getElementById('mpaJumlahKhatamRow');
-  if(khatamRow) khatamRow.style.display = (arah === 'naba-nas') ? 'block' : 'none';
+  if(khatamRow) khatamRow.style.display = (arah === 'naba-nas' && mpaMode === 'cepat') ? 'block' : 'none';
   updateMpaCount();
 }
 
