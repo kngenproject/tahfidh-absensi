@@ -5242,27 +5242,30 @@ async function kkEksekusi() {
   const appleLink = document.getElementById('appleTouchIconLink');
   if (appleLink) appleLink.href = ic192;
 
+  const base = location.href.split('?')[0].split('#')[0];
   const m = {
     name: "Tamma — Tahfidh Juz Amma",
     short_name: "Tamma",
     description: "Aplikasi tracking setoran hafalan & absensi siswa",
-    start_url: location.href.split('?')[0].split('#')[0],
-    scope: location.href.split('?')[0].split('#')[0],
+    start_url: base,
+    scope: base,
     display: "standalone",
-    orientation: "portrait",
+    orientation: "any",
     background_color: "#0c4a2a",
     theme_color: "#0c4a2a",
     lang: "id",
     icons: [
-      { src: ic192, sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: ic512, sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: ic512, sizes: "512x512", type: "image/png", purpose: "maskable" }
+      { src: ic192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: ic512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
     ]
   };
+  // Gunakan data: URL agar manifest tidak kedaluwarsa saat PWA diluncurkan ulang
+  // (blob: URL hanya valid dalam sesi tab yang sama — menyebabkan ikon Chrome muncul)
+  const manifestDataUrl = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify(m))));
   document.head.appendChild(
     Object.assign(document.createElement('link'), {
       rel: 'manifest',
-      href: URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/json' }))
+      href: manifestDataUrl
     })
   );
 })();
