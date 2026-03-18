@@ -1997,7 +1997,7 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
   .hdr-title { font-size: 15px; }
   .hdr-sub   { font-size: 10px; }
   .quick-actions { gap: 10px; }
-  .surat-check-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .surat-check-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .progress-ring { width: 76px; height: 76px; }
   .chart-slot       { height: 300px; }
   .chart-slot.tall  { height: 380px; }
@@ -2195,7 +2195,7 @@ span > .fai, div > .fai { vertical-align: middle; }
 /* Surat grid checkboxes */
 .surat-check-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
   gap: 5px;
   margin-top: 8px;
 }
@@ -2237,6 +2237,37 @@ span > .fai, div > .fai { vertical-align: middle; }
   min-width: 20px;
 }
 .surat-check-item.checked .surat-num { color: var(--g6); }
+.surat-check-item.checked { align-items: flex-start; }
+/* Ayat row — hanya muncul saat checked */
+.sci-ayat-row {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.surat-check-item.checked .sci-ayat-row { display: flex; }
+.sci-ayat-inp {
+  width: 48px;
+  padding: 2px 5px;
+  border: 1.5px solid var(--g5);
+  border-radius: 5px;
+  font-size: var(--fsm);
+  font-weight: 700;
+  color: var(--g8);
+  background: #fff;
+  text-align: center;
+  outline: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.sci-ayat-inp::-webkit-inner-spin-button,
+.sci-ayat-inp::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.sci-ayat-lbl {
+  font-size: var(--fxs);
+  color: var(--mut);
+  white-space: nowrap;
+}
+.sci-ayat-lbl b { color: var(--g7); }
 /* Quick mode */
 .quick-range-wrap {
   margin-top: 8px;
@@ -8719,6 +8750,7 @@ document.addEventListener('firebase-ready', function() {
 ============================== */
 let mpaMode = 'cepat';
 let mpaChecked = new Set();
+let mpaManualAyat = {};   // globalIdx → ayat value (untuk mode manual)
 let mpaArah = 'naba-nas'; // 'naba-nas' = An-Naba'→An-Nas | 'nas-naba' = An-Nas→An-Naba'
 let activeJuzMpa = 30; // Filter juz di mode manual pencapaian
 
@@ -8765,6 +8797,7 @@ function openPencapaian(){
   // Reset state
   mpaMode = 'cepat';
   mpaChecked = new Set();
+  mpaManualAyat = {};
   activeJuzMpa = 30;
   switchMpaTab('cepat');
   document.getElementById('mpaExistWarning').style.display = 'none';
@@ -8827,36 +8860,83 @@ function renderMpaJuzChips(){
 function buildSuratCheckGrid(){
   const grid = document.getElementById('suratCheckGrid');
   const suratList = ALL_SURAT.filter(s => s.juz === activeJuzMpa);
-  grid.innerHTML = suratList.map((s, i) => {
+  grid.innerHTML = suratList.map((s) => {
     const globalIdx = ALL_SURAT.indexOf(s);
-    return `<label class="surat-check-item ${mpaChecked.has(globalIdx) ? 'checked' : ''}" id="sci_${globalIdx}" onclick="toggleSuratCheck(${globalIdx})">
-      <input type="checkbox" ${mpaChecked.has(globalIdx) ? 'checked' : ''} onclick="event.stopPropagation();toggleSuratCheck(${globalIdx})" id="scb_${globalIdx}">
+    const isChecked = mpaChecked.has(globalIdx);
+    const ayatVal = mpaManualAyat[globalIdx] ?? s.a;
+    return `<label class="surat-check-item ${isChecked ? 'checked' : ''}" id="sci_${globalIdx}" onclick="toggleSuratCheck(${globalIdx})">
+      <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.preventDefault()" id="scb_${globalIdx}">
       <span class="surat-num">${s.n}</span>
-      <span style="flex:1;line-height:1.3;">${s.nm}<br><span style="font-size:var(--fxs);color:var(--mut);font-weight:400;">${s.a} ayat</span></span>
+      <div style="flex:1;line-height:1.3;">
+        ${s.nm}<br><span style="font-size:var(--fxs);color:var(--mut);font-weight:400;">${s.a} ayat</span>
+        <div class="sci-ayat-row">
+          <span class="sci-ayat-lbl">s/d ayat</span>
+          <input type="number" class="sci-ayat-inp" id="scia_${globalIdx}"
+            value="${ayatVal}" min="1" max="${s.a}"
+            onclick="event.stopPropagation()"
+            oninput="onSciAyatInput(${globalIdx},${s.a},this)"
+            onblur="onSciAyatInput(${globalIdx},${s.a},this)">
+          <span class="sci-ayat-lbl">/<b>${s.a}</b></span>
+        </div>
+      </div>
     </label>`;
   }).join('');
 }
 
 function toggleSuratCheck(globalIdx){
-  if(mpaChecked.has(globalIdx)) mpaChecked.delete(globalIdx);
-  else mpaChecked.add(globalIdx);
+  if(mpaChecked.has(globalIdx)){
+    mpaChecked.delete(globalIdx);
+    delete mpaManualAyat[globalIdx];
+  } else {
+    mpaChecked.add(globalIdx);
+    // Set default ayat = ayat penuh surat
+    if(mpaManualAyat[globalIdx] == null){
+      const s = ALL_SURAT[globalIdx];
+      mpaManualAyat[globalIdx] = s ? s.a : 1;
+    }
+  }
   const item = document.getElementById('sci_'+globalIdx);
   const cb = document.getElementById('scb_'+globalIdx);
   if(item) item.classList.toggle('checked', mpaChecked.has(globalIdx));
   if(cb) cb.checked = mpaChecked.has(globalIdx);
+  // Update ayat input visibility
+  const ayatInp = document.getElementById('scia_'+globalIdx);
+  if(ayatInp){
+    const s = ALL_SURAT[globalIdx];
+    if(mpaChecked.has(globalIdx)){
+      ayatInp.value = mpaManualAyat[globalIdx] ?? (s ? s.a : 1);
+    }
+  }
   updateMpaCount();
+}
+
+function onSciAyatInput(globalIdx, maxAyat, inp){
+  let v = parseInt(inp.value);
+  if(isNaN(v) || v < 1) v = 1;
+  if(v > maxAyat) v = maxAyat;
+  mpaManualAyat[globalIdx] = v;
+  // Koreksi tampilan input jika melebihi batas
+  if(parseInt(inp.value) !== v) inp.value = v;
 }
 
 function mpaSelectAll(){
   const suratList = ALL_SURAT.filter(s => s.juz === activeJuzMpa);
-  suratList.forEach(s => mpaChecked.add(ALL_SURAT.indexOf(s)));
+  suratList.forEach(s => {
+    const idx = ALL_SURAT.indexOf(s);
+    mpaChecked.add(idx);
+    if(mpaManualAyat[idx] == null) mpaManualAyat[idx] = s.a;
+  });
   buildSuratCheckGrid();
   updateMpaCount();
 }
 
 function mpaClearAll(){
   const suratList = ALL_SURAT.filter(s => s.juz === activeJuzMpa);
-  suratList.forEach(s => mpaChecked.delete(ALL_SURAT.indexOf(s)));
+  suratList.forEach(s => {
+    const idx = ALL_SURAT.indexOf(s);
+    mpaChecked.delete(idx);
+    delete mpaManualAyat[idx];
+  });
   buildSuratCheckGrid();
   updateMpaCount();
 }
@@ -9163,8 +9243,15 @@ async function simpanPencapaianAwal(){
         rentang = `${partialAyat}-${s.a}`;
       }
       stat = mpaStatSelected;
+    } else if(isManualMode){
+      // Mode manual: pakai ayat dari mpaManualAyat; jika sama dengan total = surat penuh
+      const ayatManual = mpaManualAyat[i] ?? s.a;
+      const isPartial = ayatManual < s.a;
+      rentang = isPartial ? `1-${ayatManual}` : `1-${s.a}`;
+      // Surat partial = frontier → pakai stat pilihan user; surat penuh → otomatis L
+      stat = isPartial ? mpaStatSelected : 'L';
     } else {
-      rentang = `1-${s.a}`;                    // surat penuh
+      rentang = `1-${s.a}`;                    // surat penuh (mode cepat non-partial)
       stat = isFrontier ? mpaStatSelected : 'L'; // frontier pakai pilihan, lain otomatis L
     }
     return {
