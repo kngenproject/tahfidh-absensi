@@ -2246,25 +2246,24 @@ span > .fai, div > .fai { vertical-align: middle; }
   margin-top: 4px;
 }
 .surat-check-item.checked .sci-ayat-row { display: flex; }
-.sci-ayat-inp {
-  width: 58px;
-  padding: 2px 4px;
-  border: 1.5px solid var(--g5);
-  border-radius: 5px;
-  font-size: var(--fsm);
-  font-weight: 700;
-  color: var(--g8);
-  background: #fff;
-  text-align: center;
-  outline: none;
-  cursor: pointer;
-}
 .sci-ayat-lbl {
   font-size: var(--fxs);
   color: var(--mut);
   white-space: nowrap;
 }
 .sci-ayat-lbl b { color: var(--g7); }
+/* Trigger CSD ayat di dalam surat-check-item */
+.sci-ayat-csd {
+  padding: 2px 6px 2px 8px !important;
+  min-height: 26px !important;
+  font-size: var(--fsm) !important;
+  font-weight: 700 !important;
+  color: var(--g8) !important;
+  border-color: var(--g5) !important;
+  min-width: 0 !important;
+  gap: 4px !important;
+}
+.sci-ayat-csd .csd-trigger-arrow { margin-left: 0; }
 /* Quick mode */
 .quick-range-wrap {
   margin-top: 8px;
@@ -8869,17 +8868,21 @@ function buildSuratCheckGrid(){
     const globalIdx = ALL_SURAT.indexOf(s);
     const isChecked = mpaChecked.has(globalIdx);
     const ayatVal = mpaManualAyat[globalIdx] ?? s.a;
+    const opts = Array.from({length: s.a}, (_,k) =>
+      `<option value="${k+1}" ${ayatVal===k+1?'selected':''}>${k+1}</option>`).join('');
     return `<div class="surat-check-item ${isChecked ? 'checked' : ''}" id="sci_${globalIdx}" onclick="toggleSuratCheck(${globalIdx})">
       <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleSuratCheck(${globalIdx})" id="scb_${globalIdx}">
       <span class="surat-num">${s.n}</span>
       <div style="flex:1;line-height:1.3;">
         ${s.nm}<br><span style="font-size:var(--fxs);color:var(--mut);font-weight:400;">${s.a} ayat</span>
         <div class="sci-ayat-row" onclick="event.stopPropagation()">
-          <span class="sci-ayat-lbl">s/d ayat</span>
-          <select class="sci-ayat-inp" id="scia_${globalIdx}"
-            onchange="onSciAyatInput(${globalIdx},${s.a},this)">
-            ${Array.from({length: s.a}, (_,k) => `<option value="${k+1}" ${ayatVal===k+1?'selected':''}>${k+1}</option>`).join('')}
-          </select>
+          <span class="sci-ayat-lbl">s/d</span>
+          <button type="button" class="csd-trigger sci-ayat-csd" id="scia_${globalIdx}Trigger"
+            onclick="openCsd('scia_${globalIdx}','Sampai Ayat ke-')">
+            <span id="scia_${globalIdx}Label">${ayatVal}</span>
+            <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
+          </button>
+          <select id="scia_${globalIdx}" style="display:none;" onchange="onSciAyatInput(${globalIdx},${s.a},this)">${opts}</select>
         </div>
       </div>
     </div>`;
@@ -8892,30 +8895,27 @@ function toggleSuratCheck(globalIdx){
     delete mpaManualAyat[globalIdx];
   } else {
     mpaChecked.add(globalIdx);
-    // Set default ayat = ayat penuh surat
     if(mpaManualAyat[globalIdx] == null){
       const s = ALL_SURAT[globalIdx];
       mpaManualAyat[globalIdx] = s ? s.a : 1;
     }
   }
   const item = document.getElementById('sci_'+globalIdx);
-  const cb = document.getElementById('scb_'+globalIdx);
+  const cb   = document.getElementById('scb_'+globalIdx);
   if(item) item.classList.toggle('checked', mpaChecked.has(globalIdx));
-  if(cb) cb.checked = mpaChecked.has(globalIdx);
-  // Update ayat input visibility
-  const ayatInp = document.getElementById('scia_'+globalIdx);
-  if(ayatInp){
-    const s = ALL_SURAT[globalIdx];
-    if(mpaChecked.has(globalIdx)){
-      ayatInp.value = mpaManualAyat[globalIdx] ?? (s ? s.a : 1);
-    }
-  }
+  if(cb)   cb.checked = mpaChecked.has(globalIdx);
+  // Sync label CSD trigger ayat
+  const lbl = document.getElementById('scia_'+globalIdx+'Label');
+  if(lbl) lbl.textContent = mpaManualAyat[globalIdx] ?? ALL_SURAT[globalIdx]?.a ?? '';
   updateMpaCount();
 }
 
 function onSciAyatInput(globalIdx, maxAyat, inp){
   const v = parseInt(inp.value) || maxAyat;
   mpaManualAyat[globalIdx] = v;
+  // Sync label trigger
+  const lbl = document.getElementById('scia_'+globalIdx+'Label');
+  if(lbl) lbl.textContent = v;
 }
 
 function mpaSelectAll(){
