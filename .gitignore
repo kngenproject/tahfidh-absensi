@@ -1,22 +1,19 @@
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
-
-# Node
-node_modules/
-npm-debug.log
-
-# OS
+# OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# IDE
+# Editor files
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Env (jangan pernah commit file ini)
-.env
-.env.local
-.env.production
+# Temp files
+*.log
+*.tmp
+*.temp
+
+# Node modules (if any)
+node_modules/
+package-lock.json
