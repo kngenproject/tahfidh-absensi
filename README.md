@@ -9,147 +9,13 @@
 
 ---
 
-[![Version](https://img.shields.io/badge/Versi-2.3.5-2da55f?style=flat-square&logo=git-lfs&logoColor=white)](https://github.com/USER/tamma/releases)
+[![Version](https://img.shields.io/badge/Versi-2.3.5-2da55f?style=flat-square&logo=git-lfs&logoColor=white)](https://github.com/kngenproject/tamma/releases)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=flat-square&logo=pwa&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
-[![Android APK](https://img.shields.io/badge/Android-APK-3DDC84?style=flat-square&logo=android&logoColor=white)](https://github.com/USER/tamma/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/USER/tamma/build.yml?style=flat-square&label=Build%20APK&logo=github-actions&logoColor=white)](https://github.com/USER/tamma/actions)
+[![Android APK](https://img.shields.io/badge/Android-APK-3DDC84?style=flat-square&logo=android&logoColor=white)](https://github.com/kngenproject/tamma/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/kngenproject/tamma/build.yml?style=flat-square&label=Build%20APK&logo=github-actions&logoColor=white)](https://github.com/kngenproject/tamma/actions)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Auth](https://img.shields.io/badge/Firebase-Auth-FF6F00?style=flat-square&logo=firebase&logoColor=white)](https://firebase.google.com/products/auth)
 [![License](https://img.shields.io/badge/Lisensi-MIT-blue?style=flat-square)](LICENSE)
-
-</div>
-
----
-
-## ✨ Fitur Utama
-
-| Fitur | Keterangan |
-|---|---|
-| 📖 **Tahfidh Juz 30** | Input setoran harian per siswa — surat, ayat, status Lancar / Kurang Lancar, keterangan |
-| 🎯 **Pencapaian Awal** | Catat posisi hafalan awal otomatis/manual per surat, lengkap dengan status Belum Khatam / Muroja'ah / Tasmi' |
-| 👥 **Absensi** | Tandai Hadir / Ijin / Sakit / Alpha per sesi, riwayat per tanggal, ekspor Excel per kelas |
-| 📊 **Statistik & Rekap** | Grafik performa mingguan, leaderboard kelas, stacked bar chart per kelas, trend 30 hari |
-| 🏅 **Gamifikasi** | Streak harian, badge pencapaian otomatis, progress ring hafalan |
-| 📂 **Viewer Excel** | Upload `.xlsx/.xls/.csv` untuk ditampilkan & difilter langsung di browser |
-| 🔐 **Login** | Masuk via Google OAuth atau Email/Password (Firebase Auth) |
-| 💾 **Offline-first** | Data tersinkron ke Firestore, tersedia offline via IndexedDB persistence |
-| 📲 **PWA + APK** | Install ke layar utama (PWA) atau unduh APK Android via Capacitor |
-
----
-
-## 🛠️ Tech Stack
-
-[![HTML5](https://img.shields.io/badge/HTML5-Vanilla-E34F26?style=flat-square&logo=html5&logoColor=white)]()
-[![CSS3](https://img.shields.io/badge/CSS3-Custom%20Properties-1572B6?style=flat-square&logo=css3&logoColor=white)]()
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES2020-F7DF1E?style=flat-square&logo=javascript&logoColor=black)]()
-[![Firebase](https://img.shields.io/badge/Firebase-10.7.1-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Chart.js](https://img.shields.io/badge/Chart.js-4.4.0-FF6384?style=flat-square&logo=chartdotjs&logoColor=white)](https://chartjs.org)
-[![SheetJS](https://img.shields.io/badge/SheetJS-0.18.5-217346?style=flat-square&logo=microsoftexcel&logoColor=white)](https://sheetjs.com)
-[![Capacitor](https://img.shields.io/badge/Capacitor-Android-119EFF?style=flat-square&logo=capacitor&logoColor=white)](https://capacitorjs.com)
-[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Build%20APK-2088FF?style=flat-square&logo=github-actions&logoColor=white)](https://github.com/features/actions)
-
----
-
-## 🚀 Cara Pakai
-
-### Akses Web (PWA)
-1. Buka URL aplikasi di browser Chrome/Edge/Safari
-2. Login dengan akun Google atau Email
-3. Tap **"Tambahkan ke layar utama"** untuk install sebagai PWA
-
-### Download APK Android
-Unduh APK terbaru dari halaman [**Releases**](https://github.com/USER/tamma/releases), lalu install manual di HP Android.
-
-### Build APK Sendiri
-Build APK tersedia via **GitHub Actions** (trigger manual):
-
-```
-GitHub → Actions → Build APK → Run workflow
-```
-
----
-
-## 🗂️ Struktur Proyek
-
-```
-tamma/
-├── index.html          # Single-file app (HTML + CSS + JS)
-├── android/            # Capacitor Android project
-│   └── app/
-├── .github/
-│   └── workflows/
-│       └── build.yml   # GitHub Actions — build APK
-└── README.md
-```
-
----
-
-## ⚙️ Firebase Setup
-
-Aplikasi menggunakan Firebase project `tahfidh-dan-absensi`. Untuk deploy ke project sendiri:
-
-1. Buat project baru di [Firebase Console](https://console.firebase.google.com)
-2. Aktifkan **Firestore Database** dan **Authentication**
-3. Pada Authentication, aktifkan provider:
-   - ✅ Google
-   - ✅ Email/Password
-4. Tambahkan domain ke **Authorized Domains**
-5. Ganti nilai `firebaseConfig` di `index.html`:
-
-```js
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
-};
-```
-
----
-
-## 📋 Struktur Firestore
-
-| Collection | Keterangan |
-|---|---|
-| `siswa` | Data master siswa (nama, kelas, status) |
-| `setoran` | Riwayat setoran hafalan per siswa per tahun ajaran |
-| `absensiHarian` | Absensi per tanggal (doc ID = `YYYY-MM-DD`) |
-| `points` | Poin & streak gamifikasi per siswa |
-| `config/app` | Konfigurasi global (tahun ajaran aktif) |
-
----
-
-## 📱 Screenshot
-
-![tampilan dashboard tamma](assets/screenshot.Png)
-
----
-
-## 📄 Lisensi
-
-Dirilis di bawah [MIT License](LICENSE). Bebas digunakan dan dimodifikasi untuk kebutuhan pendidikan.
-
----
-
-<div align="center">
-
-**TAMMA** — dibuat dengan ❤️ untuk mendukung program tahfidh Al-Qur'an
-
-[![Firebase](https://img.shields.io/badge/Powered%20by-Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=flat-square)]()
-
-</div>
-[![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
-
-<br/>
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=flat-square)](https://github.com/)
-[![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red.svg?style=flat-square)](https://github.com/)
-[![Platform](https://img.shields.io/badge/Platform-Mobile%20%7C%20Web-blue.svg?style=flat-square)](https://github.com/)
-[![Language](https://img.shields.io/badge/Language-Indonesia-red.svg?style=flat-square)](https://github.com/)
 
 <br/>
 
@@ -163,7 +29,6 @@ Dirilis di bawah [MIT License](LICENSE). Bebas digunakan dan dimodifikasi untuk 
 
 - [✨ Tentang Aplikasi](#-tentang-aplikasi)
 - [🚀 Fitur Unggulan](#-fitur-unggulan)
-- [🖥️ Tampilan Aplikasi](#️-tampilan-aplikasi)
 - [🛠️ Teknologi yang Digunakan](#️-teknologi-yang-digunakan)
 - [⚙️ Instalasi & Konfigurasi](#️-instalasi--konfigurasi)
 - [📱 Cara Penggunaan](#-cara-penggunaan)
@@ -172,13 +37,14 @@ Dirilis di bawah [MIT License](LICENSE). Bebas digunakan dan dimodifikasi untuk 
 - [📤 Export Data](#-export-data)
 - [🌐 PWA & Offline Support](#-pwa--offline-support)
 - [🤝 Kontribusi](#-kontribusi)
+- [❓ FAQ](#-faq)
 - [📄 Lisensi](#-lisensi)
 
 ---
 
 ## ✨ Tentang Aplikasi
 
-**Tamma-Tahfidh Juz Amma** adalah aplikasi web progresif (PWA) yang dirancang khusus untuk membantu lembaga pendidikan Al-Qur'an, TPQ, madrasah, dan pesantren dalam mengelola program tahfidh (hafalan) Juz Amma (Juz 30) secara efisien dan terstruktur.
+**TAMMA (Tahfidh Juz Amma)** adalah aplikasi web progresif (PWA) yang dirancang khusus untuk membantu lembaga pendidikan Al-Qur'an, TPQ, madrasah, dan pesantren dalam mengelola program tahfidh (hafalan) Juz Amma (Juz 30) secara efisien dan terstruktur.
 
 Aplikasi ini menggabungkan kemudahan antarmuka mobile-first dengan kekuatan database cloud Firebase, sehingga data santri dapat diakses kapan saja dan di mana saja secara real-time oleh seluruh pengajar yang berwenang.
 
@@ -195,7 +61,6 @@ Aplikasi ini menggabungkan kemudahan antarmuka mobile-first dengan kekuatan data
 
 ### 🏠 Dashboard Beranda
 - **Ringkasan statistik** jumlah santri aktif, total setoran hari ini, dan rata-rata progress
-- **Notifikasi & pengumuman** terkini
 - **Quick action** untuk menandai kehadiran massal dengan satu klik
 - **Indikator koneksi** online/offline secara real-time
 
@@ -221,11 +86,8 @@ Aplikasi ini menggabungkan kemudahan antarmuka mobile-first dengan kekuatan data
 - **Tren setoran** harian, mingguan, dan bulanan
 - **Highlight pencapaian** santri terbaik
 
-### 📋 Viewer Data
-- **Tampilan tabel** data setoran dan absensi yang bisa difilter
-- **Pencarian** santri berdasarkan nama atau kelas
-- **Preview import** sebelum data masuk ke database
-- **Deteksi kolom otomatis** saat import Excel
+### 🏅 Gamifikasi
+- Streak harian, badge pencapaian otomatis, dan progress ring hafalan
 
 ### 👤 Manajemen Siswa
 - **Import massal** dari file Excel (.xlsx)
@@ -234,10 +96,16 @@ Aplikasi ini menggabungkan kemudahan antarmuka mobile-first dengan kekuatan data
 - **Status santri**: Aktif, Lulus, Arsip/Pindah
 - **Filter per kelas** dan status
 
-### 📤 Export & Laporan
+### 📂 Viewer & Export
+- Upload `.xlsx/.xls/.csv` untuk ditampilkan & difilter langsung di browser
 - **Export ke Excel** untuk absensi harian, per kelas, dan rekap setoran
-- **Laporan setoran** per tanggal dengan detail lengkap
 - **Format laporan** profesional siap cetak
+
+### 🔐 Login & Keamanan
+- Masuk via **Google OAuth** atau **Email/Password** (Firebase Auth)
+
+### 💾 Offline-first
+- Data tersinkron ke Firestore, tersedia offline via IndexedDB persistence
 
 ---
 
@@ -251,9 +119,11 @@ Aplikasi ini menggabungkan kemudahan antarmuka mobile-first dengan kekuatan data
 | ![Firebase](https://img.shields.io/badge/-Firebase-FFCA28?logo=firebase&logoColor=black&style=flat-square) Firebase | 10.7.1 | Database & autentikasi |
 | ![Chart.js](https://img.shields.io/badge/-Chart.js-FF6384?logo=chart.js&logoColor=white&style=flat-square) Chart.js | 4.4.0 | Visualisasi data |
 | ![SheetJS](https://img.shields.io/badge/-SheetJS-217346?logo=microsoftexcel&logoColor=white&style=flat-square) SheetJS (XLSX) | 0.18.5 | Import/Export Excel |
+| ![Capacitor](https://img.shields.io/badge/-Capacitor-119EFF?logo=capacitor&logoColor=white&style=flat-square) Capacitor | Latest | Build Android APK |
 | ![PWA](https://img.shields.io/badge/-PWA-5A0FC8?logo=pwa&logoColor=white&style=flat-square) PWA | - | Instalasi mobile & offline |
 
 ### Arsitektur
+
 ```
 Frontend (SPA)  ──►  Firebase Firestore (NoSQL Cloud DB)
      │
@@ -269,7 +139,6 @@ Frontend (SPA)  ──►  Firebase Firestore (NoSQL Cloud DB)
 
 ### Prasyarat
 
-Pastikan Anda memiliki:
 - Akun [Google Firebase](https://firebase.google.com/) (gratis)
 - Browser modern (Chrome, Safari, Firefox, Edge)
 - Koneksi internet untuk setup awal
@@ -277,20 +146,22 @@ Pastikan Anda memiliki:
 ### Langkah 1 — Clone Repositori
 
 ```bash
-git clone https://github.com/username/tamma-tahfidh-juz-amma.git
-cd tamma-tahfidh-juz-amma
+git clone https://github.com/kngenproject/tamma.git
+cd tamma
 ```
 
 ### Langkah 2 — Setup Firebase
 
 1. Buka [Firebase Console](https://console.firebase.google.com/)
 2. Klik **"Add project"** → isi nama proyek (misal: `tamma-tahfidh`)
-3. Aktifkan **Firestore Database** (pilih mode *production* atau *test*)
-4. Buka **Project Settings** → **General** → salin konfigurasi Firebase
+3. Aktifkan **Firestore Database** dan **Authentication**
+4. Pada Authentication, aktifkan provider: ✅ Google dan ✅ Email/Password
+5. Tambahkan domain ke **Authorized Domains**
+6. Buka **Project Settings** → **General** → salin konfigurasi Firebase
 
 ### Langkah 3 — Konfigurasi Aplikasi
 
-Buka file `index.html` dan cari bagian konfigurasi Firebase, lalu ganti dengan data proyek Anda:
+Buka file `index.html` dan ganti nilai `firebaseConfig` dengan data proyek Anda:
 
 ```javascript
 const firebaseConfig = {
@@ -311,7 +182,7 @@ Karena ini adalah **Single File App**, tidak perlu build process. Cukup:
 # Opsi 1: Buka langsung di browser
 open index.html
 
-# Opsi 2: Gunakan live server (VSCode extension)
+# Opsi 2: Gunakan Live Server (VSCode extension)
 # Install "Live Server" → klik kanan index.html → "Open with Live Server"
 
 # Opsi 3: Deploy ke hosting (disarankan untuk penggunaan tim)
@@ -321,18 +192,21 @@ open index.html
 ### Langkah 5 — Deploy ke Firebase Hosting (Opsional)
 
 ```bash
-# Install Firebase CLI
 npm install -g firebase-tools
-
-# Login ke Firebase
 firebase login
-
-# Inisialisasi project
 firebase init hosting
-
-# Deploy
 firebase deploy
 ```
+
+### Build APK Android
+
+Build APK tersedia via **GitHub Actions** (trigger manual):
+
+```
+GitHub → Actions → Build APK → Run workflow
+```
+
+Atau unduh APK terbaru dari halaman [**Releases**](https://github.com/kngenproject/tamma/releases).
 
 ---
 
@@ -342,7 +216,7 @@ firebase deploy
 
 ```
 1. Buka aplikasi di browser
-2. Masuk ke halaman "Absen" atau "Tahfidh"
+2. Login dengan akun Google atau Email
 3. Import data santri melalui tombol "Import Excel"
    - Siapkan file .xlsx dengan kolom: Nama Siswa, Kelas
 4. Atau tambah manual via tombol "Tambah Siswa"
@@ -376,18 +250,31 @@ firebase deploy
 3. Grafik akan otomatis diperbarui
 ```
 
+### 📲 Install sebagai PWA
+
+**Android (Chrome):**
+```
+Buka aplikasi → Klik ikon "Add to Home Screen" di banner bawah
+atau Menu Chrome (⋮) → "Add to Home Screen"
+```
+
+**iOS (Safari):**
+```
+Buka aplikasi → Klik tombol Share (□↑) → "Add to Home Screen"
+```
+
 ---
 
 ## 📁 Struktur Proyek
 
 ```
-tamma-tahfidh-juz-amma/
+tamma/
 │
 ├── index.html              # Seluruh aplikasi (Single File App)
 │   ├── <head>              # Meta, PWA config, CDN scripts
 │   ├── <style>             # CSS Variables, komponen, responsif
 │   ├── <body>
-│   │   ├── #pgwrap         # Container 6 halaman (sliding)
+│   │   ├── #pgwrap         # Container halaman (sliding)
 │   │   │   ├── #pg0        # Beranda / Dashboard
 │   │   │   ├── #pg1        # Tahfidh (Hafalan)
 │   │   │   ├── #pg2        # Absensi
@@ -398,6 +285,11 @@ tamma-tahfidh-juz-amma/
 │   │   └── [Modals]        # Edit, Import, Preview, Detail
 │   └── <script>            # Semua logika JavaScript
 │
+├── android/                # Capacitor Android project
+│   └── app/
+├── .github/
+│   └── workflows/
+│       └── build.yml       # GitHub Actions — build APK
 ├── README.md               # Dokumentasi ini
 └── LICENSE                 # Lisensi MIT
 ```
@@ -414,6 +306,8 @@ tamma-tahfidh-juz-amma/
 | `setoran` | Riwayat setoran hafalan | `{ siswaId, surat, ayatMulai, ayatAkhir, keterangan, tanggal }` |
 | `absensiHarian` | Data kehadiran harian | `{ tanggal, siswa: [{nama, kelas, status, waktu}] }` |
 | `pencapaianAwal` | Data hafalan awal santri | `{ siswaId, suratHafal: [], tanggal }` |
+| `points` | Poin & streak gamifikasi | per siswa |
+| `config/app` | Konfigurasi global | tahun ajaran aktif |
 
 ### Rules Firestore (Contoh)
 
@@ -421,7 +315,6 @@ tamma-tahfidh-juz-amma/
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Sesuaikan dengan kebutuhan autentikasi Anda
     match /{document=**} {
       allow read, write: if true; // Development only
       // Production: gunakan autentikasi Firebase
@@ -457,55 +350,29 @@ Aplikasi ini adalah **Progressive Web App (PWA)** yang dapat:
 - 📐 **Responsif** untuk semua ukuran layar
 - ⚡ **Performa tinggi** dengan desain mobile-first
 
-### Cara Install di HP
-
-**Android (Chrome):**
-```
-Buka aplikasi → Klik ikon "Add to Home Screen" di banner bawah
-atau Menu Chrome (⋮) → "Add to Home Screen"
-```
-
-**iOS (Safari):**
-```
-Buka aplikasi → Klik tombol Share (□↑) → "Add to Home Screen"
-```
-
 ---
 
 ## 🤝 Kontribusi
 
 Kontribusi sangat diterima! Berikut cara berkontribusi:
 
-### Cara Berkontribusi
-
 1. **Fork** repositori ini
-   ```bash
-   # Klik tombol "Fork" di pojok kanan atas halaman GitHub
-   ```
-
 2. **Clone** fork Anda
    ```bash
-   git clone https://github.com/username-anda/tamma-tahfidh-juz-amma.git
+   git clone https://github.com/kngenproject/tamma.git
    ```
-
 3. **Buat branch** untuk fitur/perbaikan Anda
    ```bash
    git checkout -b feature/nama-fitur-baru
-   # atau
-   git checkout -b fix/nama-bug-yang-diperbaiki
    ```
-
 4. **Commit** perubahan Anda
    ```bash
-   git add .
    git commit -m "feat: tambah fitur export PDF laporan bulanan"
    ```
-
 5. **Push** ke branch Anda
    ```bash
    git push origin feature/nama-fitur-baru
    ```
-
 6. Buat **Pull Request** ke branch `main`
 
 ### Panduan Commit Message
@@ -528,14 +395,13 @@ chore:    Perubahan build/config
 - [ ] 🌙 Dark mode
 - [ ] 🌍 Dukungan multi-bahasa
 - [ ] 📅 Kalender setoran dan absensi
-- [ ] 🏆 Sistem reward dan leaderboard santri
 - [ ] 📧 Email laporan mingguan otomatis
 
 ---
 
 ## 🐛 Melaporkan Bug
 
-Temukan bug? Silakan [buka issue baru](https://github.com/username/tamma-tahfidh-juz-amma/issues/new) dengan:
+Temukan bug? Silakan [buka issue baru](https://github.com/kngenproject/tamma/issues/new) dengan:
 
 - **Judul** yang deskriptif
 - **Langkah reproduksi** bug
@@ -575,7 +441,7 @@ Proyek ini dilisensikan di bawah **MIT License** — lihat file [LICENSE](LICENS
 ```
 MIT License
 
-Copyright (c) 2024 Tamma-Tahfidh
+Copyright (c) 2024 kngenproject
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -591,9 +457,9 @@ furnished to do so, subject to the following conditions: ...
 
 ### 🌟 Jika aplikasi ini bermanfaat, jangan lupa beri bintang!
 
-[![GitHub stars](https://img.shields.io/github/stars/username/tamma-tahfidh-juz-amma?style=social)](https://github.com/username/tamma-tahfidh-juz-amma/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/username/tamma-tahfidh-juz-amma?style=social)](https://github.com/username/tamma-tahfidh-juz-amma/network/members)
-[![GitHub watchers](https://img.shields.io/github/watchers/username/tamma-tahfidh-juz-amma?style=social)](https://github.com/username/tamma-tahfidh-juz-amma/watchers)
+[![GitHub stars](https://img.shields.io/github/stars/kngenproject/tamma?style=social)](https://github.com/kngenproject/tamma/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/kngenproject/tamma?style=social)](https://github.com/kngenproject/tamma/network/members)
+[![GitHub watchers](https://img.shields.io/github/watchers/kngenproject/tamma?style=social)](https://github.com/kngenproject/tamma/watchers)
 
 <br/>
 
@@ -605,7 +471,7 @@ furnished to do so, subject to the following conditions: ...
 
 <br/>
 
-[![forthebadge](https://img.shields.io/badge/Built%20For-Quran%20Teachers-1a7040?style=for-the-badge&logo=quora&logoColor=white)](https://github.com/)
-[![forthebadge](https://img.shields.io/badge/Powered%20By-Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![Built For](https://img.shields.io/badge/Built%20For-Quran%20Teachers-1a7040?style=for-the-badge&logo=quora&logoColor=white)](https://github.com/kngenproject/tamma)
+[![Powered By](https://img.shields.io/badge/Powered%20By-Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 
 </div>
