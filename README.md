@@ -123,7 +123,7 @@ const firebaseConfig = {
 
 ## 📱 Screenshot
 
-[tampilan dashboard tamma](assets/screenshot.Png)
+![tampilan dashboard tamma](assets/screenshot.Png)
 
 ---
 
