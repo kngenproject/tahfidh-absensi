@@ -28,6 +28,7 @@
 ## 📋 Daftar Isi
 
 - [✨ Tentang Aplikasi](#-tentang-aplikasi)
+- [🖥️ Tampilan Aplikasi](#️-tampilan-aplikasi)
 - [🚀 Fitur Unggulan](#-fitur-unggulan)
 - [🛠️ Teknologi yang Digunakan](#️-teknologi-yang-digunakan)
 - [⚙️ Instalasi & Konfigurasi](#️-instalasi--konfigurasi)
@@ -54,6 +55,24 @@ Aplikasi ini menggabungkan kemudahan antarmuka mobile-first dengan kekuatan data
 - Memberikan visualisasi progress hafalan yang jelas dan mudah dipahami
 - Memudahkan pelaporan kepada wali santri dan pimpinan lembaga
 - Menyediakan data historis yang lengkap dan terstruktur
+
+---
+
+## 🖥️ Tampilan Aplikasi
+
+<div align="center">
+
+| Dashboard | Tahfidh | Absensi |
+|:---------:|:-------:|:-------:|
+| ![Dashboard](assets/screenshot-dashboard.png) | ![Tahfidh](assets/screenshot-tahfidh.png) | ![Absensi](assets/screenshot-absensi.png) |
+
+| Statistik | Leaderboard |
+|:---------:|:-----------:|
+| ![Statistik](assets/screenshot-statistik.png) | ![Leaderboard](assets/screenshot-leaderboard.png) |
+
+> 📸 *Ganti file di folder `assets/` dengan screenshot aplikasi Anda.*
+
+</div>
 
 ---
 
