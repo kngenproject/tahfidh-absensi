@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="screen-orientation" content="portrait">
 <title>Tamma-Tahfidh Juz Amma</title>
 <meta name="theme-color" content="#0c4a2a">
 <meta name="mobile-web-app-capable" content="yes">
@@ -3523,21 +3524,19 @@ span > .fai, div > .fai { vertical-align: middle; }
           <!-- Riwayat Hafalan Terakhir Siswa (muncul setelah pilih siswa) -->
           <div id="siswaHafalanHistory" style="display:none; margin-top:8px; background:var(--g0); border:1.5px solid var(--brd); border-radius:var(--rs); padding:10px; font-size:var(--fsm);"></div>
 
-          <!-- Pilih Juz -->
-          <div class="mt8">
-            <label class="flbl">Pilih Juz</label>
-            <button type="button" class="csd-trigger placeholder" id="juzSelectTrigger" onclick="openCsd('juzSelect','📚 Pilih Juz')">
-              <span id="juzSelectLabel">Juz 30 — Juz Amma</span>
-              <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
-            </button>
-            <select id="juzSelect" style="display:none;" onchange="onJuzChange();"></select>
-          </div>
-
-          <!-- Surat + Ayat -->
-          <div class="g3 mt8">
+          <!-- Juz + Surat + Dari + Sampai dalam 1 grid -->
+          <div style="display:grid; grid-template-columns:auto 1fr auto auto; gap:6px; align-items:end; margin-top:8px;">
             <div>
+              <label class="flbl">Juz</label>
+              <button type="button" class="csd-trigger placeholder" id="juzSelectTrigger" onclick="openCsd('juzSelect','📚 Pilih Juz')" style="min-width:54px;">
+                <span id="juzSelectLabel">30</span>
+                <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
+              </button>
+              <select id="juzSelect" style="display:none;" onchange="onJuzChange();"></select>
+            </div>
+            <div style="min-width:0;">
               <label class="flbl">Surat</label>
-              <button type="button" class="csd-trigger placeholder" id="suratTrigger" onclick="openCsd('surat','📖 Pilih Surat')">
+              <button type="button" class="csd-trigger placeholder" id="suratTrigger" onclick="openCsd('surat','📖 Pilih Surat')" style="width:100%;">
                 <span id="suratLabel">— Pilih Surat —</span>
                 <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
               </button>
@@ -3545,7 +3544,7 @@ span > .fai, div > .fai { vertical-align: middle; }
             </div>
             <div>
               <label class="flbl">Dari</label>
-              <button type="button" class="csd-trigger placeholder" id="ayatMulaiTrigger" onclick="openCsd('ayatMulai','Dari Ayat')">
+              <button type="button" class="csd-trigger placeholder" id="ayatMulaiTrigger" onclick="openCsd('ayatMulai','Dari Ayat')" style="min-width:48px;">
                 <span id="ayatMulaiLabel">—</span>
                 <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
               </button>
@@ -3553,7 +3552,7 @@ span > .fai, div > .fai { vertical-align: middle; }
             </div>
             <div>
               <label class="flbl">Sampai</label>
-              <button type="button" class="csd-trigger placeholder" id="ayatSampaiTrigger" onclick="openCsd('ayatSampai','Sampai Ayat')">
+              <button type="button" class="csd-trigger placeholder" id="ayatSampaiTrigger" onclick="openCsd('ayatSampai','Sampai Ayat')" style="min-width:48px;">
                 <span id="ayatSampaiLabel">—</span>
                 <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
               </button>
@@ -4575,16 +4574,18 @@ let _lastSyncAt = Date.now(); // timestamp saat terakhir fetch dari Firestore
 const _MIN_BG_MS = 30_000; // min waktu background (30 detik) sebelum re-fetch
 
 document.addEventListener('visibilitychange', () => {
-  if(!currentUser) return; // jangan simpan jika belum login
+  if(!currentUser || !currentSchoolId) return; // jangan jalan jika belum login/sekolah
   if(document.visibilityState === 'hidden'){
     // ── TUTUP / BACKGROUND: simpan ke localStorage ──
     _hiddenAt = Date.now();
-    ls.set('db_setoran', JSON.stringify(dataSetoran));
-    ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
-    ls.set('db_master_siswa', JSON.stringify(masterSiswa));
-    ls.set('db_points', JSON.stringify(userPoints));
-    ls.set('db_streaks', JSON.stringify(userStreaks));
-    ls.set('_lastSyncAt', String(_lastSyncAt));
+    try {
+      ls.set('db_setoran', JSON.stringify(dataSetoran));
+      ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
+      ls.set('db_master_siswa', JSON.stringify(masterSiswa));
+      ls.set('db_points', JSON.stringify(userPoints));
+      ls.set('db_streaks', JSON.stringify(userStreaks));
+      ls.set('_lastSyncAt', String(_lastSyncAt));
+    } catch(e) { console.warn('[visibility] save error:', e); }
 
   } else if(document.visibilityState === 'visible'){
     // ── BUKA / KEMBALI KE FOREGROUND: re-fetch jika sudah lama di background ──
@@ -4593,11 +4594,11 @@ document.addEventListener('visibilitychange', () => {
 
     if(bgDuration >= _MIN_BG_MS){
       // Sudah ≥30 detik di background → ambil data terbaru dari Firestore
-      if(typeof fetchAllData === 'function'){
+      if(typeof fetchAllData === 'function' && currentSchoolId){
         fetchAllData().then(() => {
           _lastSyncAt = Date.now();
           ls.set('_lastSyncAt', String(_lastSyncAt));
-        });
+        }).catch(e => console.warn('[visibility] fetchAllData error:', e));
       }
     }
     // Jika < 30 detik (misal switch tab sebentar), tidak perlu fetch ulang
@@ -4631,6 +4632,16 @@ function initAppUI(){
   // Trigger init
   document.dispatchEvent(new Event('firebase-ready'));
 }
+
+// ─── Lock orientasi portrait (cegah rotasi otomatis) ──────────
+(function _lockOrientation(){
+  try {
+    const so = screen.orientation || window.screen.orientation;
+    if (so && typeof so.lock === 'function') {
+      so.lock('portrait').catch(() => {});
+    }
+  } catch(e) {}
+})();
 
 // ──────────────────────────────────────────────────────────
 
@@ -5718,6 +5729,55 @@ const ALL_SURAT = [
 // Backward compat alias
 const SURAT_JUZ30 = ALL_SURAT.filter(s => s.juz === 30);
 
+// ── Tabel batas ayat per juz untuk surat yang melintasi beberapa juz ──
+// Format: { suratN: nomor surat, juz: juz ke-N, ayatMulai: ayat pertama di juz ini }
+// Sumber: standard mushaf Utsmani
+const JUZ_SURAT_MAP = (function(){
+  // [juz, suratN, ayatMulai]
+  const raw = [
+    [1,1,1],[1,2,1],
+    [2,2,142],
+    [3,2,253],[3,3,1],
+    [4,3,92],[4,4,1],
+    [5,4,24],[5,4,147],
+    [6,4,148],[6,5,1],[6,5,82],
+    [7,5,83],[7,6,1],[7,6,111],
+    [8,6,111],[8,7,1],[8,7,88],
+    [9,7,88],[9,8,1],[9,8,41],
+    [10,8,41],[10,9,1],[10,9,93],
+    [11,9,93],[11,10,1],[11,11,6],
+    [12,11,6],[12,11,96],[12,12,1],[12,12,53],
+    [13,12,53],[13,13,1],[13,14,1],[13,14,53],
+    [14,14,53],[14,15,1],[14,16,1],[14,16,51],
+    [15,16,51],[15,17,1],[15,18,1],[15,18,75],
+    [16,18,75],[16,19,1],[16,20,1],[16,20,136],
+    [17,20,136],[17,21,1],[17,22,1],[17,23,1],[17,23,75],
+    [18,23,75],[18,24,1],[18,25,1],[18,26,1],[18,27,1],[18,27,56],
+    [19,27,56],[19,28,1],[19,29,1],[19,29,46],
+    [20,29,46],[20,30,1],[20,31,1],[20,32,1],[20,33,1],[20,33,31],
+    [21,33,31],[21,34,1],[21,35,1],[21,36,1],[21,37,1],[21,38,1],[21,39,1],[21,39,32],
+    [22,39,32],[22,40,1],[22,41,1],[22,41,47],
+    [23,41,47],[23,42,1],[23,43,1],[23,44,1],[23,45,1],[23,46,1],
+    [24,46,1],[24,47,1],[24,48,1],[24,49,1],[24,50,1],[24,51,1],[24,51,31],
+    [25,51,31],[25,52,1],[25,53,1],[25,54,1],[25,55,1],[25,56,1],[25,57,1],[25,57,30],
+    [26,57,30],[26,58,1],[26,59,1],[26,60,1],[26,61,1],[26,62,1],[26,63,1],[26,64,1],[26,65,1],[26,66,1],
+    [27,66,1],[27,67,1],[27,68,1],[27,69,1],[27,70,1],[27,71,1],[27,72,1],[27,73,1],[27,74,1],[27,75,1],[27,76,1],[27,77,1],
+    [28,77,1],[28,78,1],[28,79,1],[28,80,1],[28,81,1],[28,82,1],[28,83,1],[28,84,1],[28,85,1],[28,86,1],[28,87,1],[28,88,1],[28,89,1],[28,90,1],[28,91,1],[28,92,1],[28,93,1],[28,94,1],
+    [29,94,1],[29,95,1],[29,96,1],[29,97,1],[29,98,1],[29,99,1],[29,100,1],[29,101,1],[29,102,1],[29,103,1],[29,104,1],[29,105,1],[29,106,1],[29,107,1],[29,108,1],[29,109,1],[29,110,1],[29,111,1],[29,112,1],[29,113,1],[29,114,1],
+    [30,78,1],[30,79,1],[30,80,1],[30,81,1],[30,82,1],[30,83,1],[30,84,1],[30,85,1],[30,86,1],[30,87,1],[30,88,1],[30,89,1],[30,90,1],[30,91,1],[30,92,1],[30,93,1],[30,94,1],[30,95,1],[30,96,1],[30,97,1],[30,98,1],[30,99,1],[30,100,1],[30,101,1],[30,102,1],[30,103,1],[30,104,1],[30,105,1],[30,106,1],[30,107,1],[30,108,1],[30,109,1],[30,110,1],[30,111,1],[30,112,1],[30,113,1],[30,114,1],
+  ];
+  // Build map: juz -> [{suratN, ayatMulai}]
+  const map = {};
+  raw.forEach(([juz, suratN, ayatMulai]) => {
+    if (!map[juz]) map[juz] = [];
+    // Hindari duplikat (surat bisa muncul lebih dari sekali di raw untuk batas awal juz)
+    if (!map[juz].some(x => x.suratN === suratN && x.ayatMulai === ayatMulai)) {
+      map[juz].push({ suratN, ayatMulai });
+    }
+  });
+  return map;
+})();
+
 // Juz aktif di form setoran (default 30 = Juz Amma)
 let activeJuzSetoran = 30;
 
@@ -5811,18 +5871,65 @@ function getSiswaJuzProgress(nama, ket) {
   return { pct, frontierNm: fs.nm, frontierAyat, frontierAyatDisplay, frontierTotal: fs.a, khatamCount, totalSurat };
 }
 
-// Isi select surat berdasar juz aktif
+// Isi select surat berdasar juz aktif (termasuk surat yang melintas batas juz)
 function buildSuratDropdown(){
   const sel = document.getElementById('surat');
   const prev = sel.value;
   sel.innerHTML = '<option value="">— Pilih Surat —</option>';
-  const list = ALL_SURAT.filter(s => s.juz === activeJuzSetoran);
-  list.forEach(s => sel.add(new Option(`${s.n}. ${s.nm}`, s.nm)));
+
+  // Gunakan JUZ_SURAT_MAP untuk menentukan surat yang ada di juz ini
+  const juzEntries = JUZ_SURAT_MAP[activeJuzSetoran] || [];
+  // Urutkan berdasar nomor surat
+  const sorted = juzEntries.slice().sort((a, b) => a.suratN - b.suratN);
+  // Hilangkan duplikat (ambil ayatMulai terkecil per surat)
+  const unique = {};
+  sorted.forEach(e => {
+    if (!unique[e.suratN] || e.ayatMulai < unique[e.suratN]) unique[e.suratN] = e.ayatMulai;
+  });
+
+  const list = Object.keys(unique).sort((a,b)=>a-b).map(n => {
+    const s = ALL_SURAT.find(x => x.n === parseInt(n));
+    return s ? { ...s, ayatMulai: unique[n] } : null;
+  }).filter(Boolean);
+
+  list.forEach(s => {
+    const label = s.ayatMulai > 1
+      ? `${s.n}. ${s.nm} (ayat ${s.ayatMulai}–${s.a})`
+      : `${s.n}. ${s.nm}`;
+    sel.add(new Option(label, s.nm));
+  });
+
   // Restore selection jika masih ada
   if([...sel.options].some(o => o.value === prev)) sel.value = prev;
   else sel.selectedIndex = list.length > 0 ? 1 : 0;
   syncCsdTrigger('surat');
   renderAyatList();
+}
+
+// Override renderAyatList agar ayatMulai dari JUZ_SURAT_MAP digunakan
+function renderAyatList(){
+  const suratNm = document.getElementById('surat').value;
+  const s = ALL_SURAT.find(x => x.nm === suratNm);
+  if(!s) return;
+
+  // Cari ayatMulai untuk surat ini di juz aktif
+  const juzEntries = JUZ_SURAT_MAP[activeJuzSetoran] || [];
+  const entry = juzEntries.find(e => e.suratN === s.n);
+  const ayatMulaiJuz = entry ? entry.ayatMulai : 1;
+
+  const m = document.getElementById('ayatMulai');
+  const sp = document.getElementById('ayatSampai');
+  m.innerHTML = '';
+  sp.innerHTML = '';
+  for(let i = ayatMulaiJuz; i <= s.a; i++){
+    m.add(new Option(i, i));
+    sp.add(new Option(i, i));
+  }
+  m.value = ayatMulaiJuz;
+  sp.value = s.a;
+  syncCsdTrigger('ayatMulai');
+  syncCsdTrigger('ayatSampai');
+  renderAyatGrid();
 }
 
 // Init juz selector
@@ -5834,7 +5941,11 @@ function buildSuratDropdown(){
     juzSel.add(new Option(label, j));
   }
   juzSel.value = 30;
-  syncCsdTrigger('juzSelect');
+  // Tampilkan angka saja
+  const juzLbl = document.getElementById('juzSelectLabel');
+  if (juzLbl) juzLbl.textContent = '30';
+  const juzTrigger = document.getElementById('juzSelectTrigger');
+  if (juzTrigger) juzTrigger.classList.remove('placeholder');
   buildSuratDropdown();
 })();
 
@@ -5845,6 +5956,11 @@ function buildSuratDropdown(){
 // Dipanggil saat juz dropdown berubah
 function onJuzChange(){
   activeJuzSetoran = parseInt(document.getElementById('juzSelect').value) || 30;
+  // Tampilkan angka juz saja di trigger (bukan teks panjang)
+  const juzLbl = document.getElementById('juzSelectLabel');
+  if (juzLbl) juzLbl.textContent = activeJuzSetoran;
+  const juzTrigger = document.getElementById('juzSelectTrigger');
+  if (juzTrigger) juzTrigger.classList.remove('placeholder');
   buildSuratDropdown();
   // Update progress ring title
   const title = document.querySelector('.progress-title');
@@ -5906,6 +6022,71 @@ function showSiswaHafalanHistory(nama){
   const savedTambahan = nama ? (_tambahanPerSiswa[nama] || '') : '';
   const tambahanSel = document.getElementById('tambahan');
   if (tambahanSel) { tambahanSel.value = savedTambahan; syncCsdTrigger('tambahan'); }
+
+  // ── Auto-load kolom dari riwayat setoran terakhir siswa ──
+  if (nama) {
+    const riwayatSiswa = dataSetoran.filter(s => s.nama === nama && !s.arahHafalan);
+    if (riwayatSiswa.length > 0) {
+      const terakhir = riwayatSiswa[0]; // dataSetoran sudah diurutkan terbaru di depan
+      // Cari juz dari surat terakhir
+      const suratObj = ALL_SURAT.find(s => s.nm === terakhir.surat);
+      const juzTerakhir = suratObj ? suratObj.juz : 30;
+
+      // Set juz
+      const juzSel = document.getElementById('juzSelect');
+      if (juzSel && juzSel.value != juzTerakhir) {
+        juzSel.value = juzTerakhir;
+        const juzLbl = document.getElementById('juzSelectLabel');
+        if (juzLbl) juzLbl.textContent = juzTerakhir;
+        const juzTrigger = document.getElementById('juzSelectTrigger');
+        if (juzTrigger) juzTrigger.classList.remove('placeholder');
+        activeJuzSetoran = juzTerakhir;
+        // Build surat dropdown untuk juz ini
+        const suratSel = document.getElementById('surat');
+        suratSel.innerHTML = '<option value="">— Pilih Surat —</option>';
+        ALL_SURAT.filter(s => s.juz === juzTerakhir).forEach(s => suratSel.add(new Option(`${s.n}. ${s.nm}`, s.nm)));
+      } else if (juzSel) {
+        activeJuzSetoran = parseInt(juzSel.value) || 30;
+      }
+
+      // Set surat
+      const suratSel = document.getElementById('surat');
+      if (suratSel && terakhir.surat) {
+        suratSel.value = terakhir.surat;
+        syncCsdTrigger('surat');
+      }
+
+      // Set ayat mulai & sampai dari rentang terakhir
+      if (terakhir.rentang && suratObj) {
+        const parts = terakhir.rentang.split('-');
+        const ayatMulaiVal = parseInt(parts[0]) || 1;
+        const ayatSampaiVal = parseInt(parts[1] || parts[0]) || suratObj.a;
+
+        const mulaiSel = document.getElementById('ayatMulai');
+        const sampaiSel = document.getElementById('ayatSampai');
+        mulaiSel.innerHTML = '';
+        sampaiSel.innerHTML = '';
+        for (let i = 1; i <= suratObj.a; i++) {
+          mulaiSel.add(new Option(i, i));
+          sampaiSel.add(new Option(i, i));
+        }
+        mulaiSel.value = ayatMulaiVal;
+        sampaiSel.value = ayatSampaiVal;
+        syncCsdTrigger('ayatMulai');
+        syncCsdTrigger('ayatSampai');
+      }
+
+      // Set status
+      const statSel = document.getElementById('statLancar');
+      if (statSel && terakhir.stat) {
+        statSel.value = terakhir.stat;
+        syncCsdTrigger('statLancar');
+      }
+
+      // Render grid ayat (kosong/fresh saat baru pilih siswa)
+      renderAyatGrid();
+    }
+  }
 
   const panel = document.getElementById('siswaHafalanHistory');
   if(!panel) return;
@@ -7545,32 +7726,19 @@ function renderDdSiswa(){
 /* ==============================
    TAHFIDH FUNCTIONS
 ============================== */
-function renderAyatList(){
-  const s = ALL_SURAT.find(x => x.nm === document.getElementById('surat').value);
-  if(!s) return;
-  const m = document.getElementById('ayatMulai');
-  const sp = document.getElementById('ayatSampai');
-  m.innerHTML = '';
-  sp.innerHTML = '';
-  for(let i=1; i<=s.a; i++){ 
-    m.add(new Option(i,i)); 
-    sp.add(new Option(i,i)); 
-  }
-  m.value = 1;
-  sp.value = s.a;
-  syncCsdTrigger('ayatMulai');
-  syncCsdTrigger('ayatSampai');
-  renderAyatGrid();
-}
-
 function renderAyatGrid(){
   const g = document.getElementById('ayatGrid');
   const s = parseInt(document.getElementById('ayatMulai').value) || 1;
   const e = parseInt(document.getElementById('ayatSampai').value) || 1;
+
+  // Kumpulkan ayat yang sudah ditandai salah sebelum rebuild
+  const prevSalah = new Set();
+  g.querySelectorAll('.ai.salah').forEach(el => prevSalah.add(parseInt(el.textContent)));
+
   g.innerHTML = '';
   for(let i=s; i<=e; i++){
     const d = document.createElement('div');
-    d.className = 'ai'; 
+    d.className = 'ai' + (prevSalah.has(i) ? ' salah' : '');
     d.textContent = i;
     d.onclick = () => d.classList.toggle('salah');
     g.appendChild(d);
