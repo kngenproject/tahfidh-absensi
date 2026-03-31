@@ -5757,13 +5757,13 @@ const JUZ_SURAT_MAP = (function(){
     [20,29,46],[20,30,1],[20,31,1],[20,32,1],[20,33,1],[20,33,31],
     [21,33,31],[21,34,1],[21,35,1],[21,36,1],[21,37,1],[21,38,1],[21,39,1],[21,39,32],
     [22,39,32],[22,40,1],[22,41,1],[22,41,47],
-    [23,41,47],[23,42,1],[23,43,1],[23,44,1],[23,45,1],[23,45,37],
-    [24,45,37],[24,46,1],[24,47,1],[24,48,1],[24,49,1],[24,50,1],[24,51,1],[24,51,31],
+    [23,41,47],[23,42,1],[23,43,1],[23,44,1],[23,45,1],[23,46,1],
+    [24,46,1],[24,47,1],[24,48,1],[24,49,1],[24,50,1],[24,51,1],[24,51,31],
     [25,51,31],[25,52,1],[25,53,1],[25,54,1],[25,55,1],[25,56,1],[25,57,1],[25,57,30],
-    [26,57,30],
-    [27,66,1],
-    [28,58,1],[28,59,1],[28,60,1],[28,61,1],[28,62,1],[28,63,1],[28,64,1],[28,65,1],[28,66,1],
-    [29,67,1],[29,68,1],[29,69,1],[29,70,1],[29,71,1],[29,72,1],[29,73,1],[29,74,1],[29,75,1],[29,76,1],[29,77,1],
+    [26,57,30],[26,58,1],[26,59,1],[26,60,1],[26,61,1],[26,62,1],[26,63,1],[26,64,1],[26,65,1],[26,66,1],
+    [27,66,1],[27,67,1],[27,68,1],[27,69,1],[27,70,1],[27,71,1],[27,72,1],[27,73,1],[27,74,1],[27,75,1],[27,76,1],[27,77,1],
+    [28,77,1],[28,78,1],[28,79,1],[28,80,1],[28,81,1],[28,82,1],[28,83,1],[28,84,1],[28,85,1],[28,86,1],[28,87,1],[28,88,1],[28,89,1],[28,90,1],[28,91,1],[28,92,1],[28,93,1],[28,94,1],
+    [29,94,1],[29,95,1],[29,96,1],[29,97,1],[29,98,1],[29,99,1],[29,100,1],[29,101,1],[29,102,1],[29,103,1],[29,104,1],[29,105,1],[29,106,1],[29,107,1],[29,108,1],[29,109,1],[29,110,1],[29,111,1],[29,112,1],[29,113,1],[29,114,1],
     [30,78,1],[30,79,1],[30,80,1],[30,81,1],[30,82,1],[30,83,1],[30,84,1],[30,85,1],[30,86,1],[30,87,1],[30,88,1],[30,89,1],[30,90,1],[30,91,1],[30,92,1],[30,93,1],[30,94,1],[30,95,1],[30,96,1],[30,97,1],[30,98,1],[30,99,1],[30,100,1],[30,101,1],[30,102,1],[30,103,1],[30,104,1],[30,105,1],[30,106,1],[30,107,1],[30,108,1],[30,109,1],[30,110,1],[30,111,1],[30,112,1],[30,113,1],[30,114,1],
   ];
   // Build map: juz -> [{suratN, ayatMulai}]
@@ -6034,19 +6034,22 @@ function showSiswaHafalanHistory(nama){
 
       // Set juz
       const juzSel = document.getElementById('juzSelect');
-      if (juzSel) {
+      if (juzSel && juzSel.value != juzTerakhir) {
         juzSel.value = juzTerakhir;
         const juzLbl = document.getElementById('juzSelectLabel');
         if (juzLbl) juzLbl.textContent = juzTerakhir;
         const juzTrigger = document.getElementById('juzSelectTrigger');
         if (juzTrigger) juzTrigger.classList.remove('placeholder');
         activeJuzSetoran = juzTerakhir;
+        // Build surat dropdown untuk juz ini
+        const suratSel = document.getElementById('surat');
+        suratSel.innerHTML = '<option value="">— Pilih Surat —</option>';
+        ALL_SURAT.filter(s => s.juz === juzTerakhir).forEach(s => suratSel.add(new Option(`${s.n}. ${s.nm}`, s.nm)));
+      } else if (juzSel) {
+        activeJuzSetoran = parseInt(juzSel.value) || 30;
       }
 
-      // Rebuild surat dropdown sesuai juz (selalu, pakai buildSuratDropdown agar konsisten)
-      buildSuratDropdown();
-
-      // Set surat setelah dropdown terisi
+      // Set surat
       const suratSel = document.getElementById('surat');
       if (suratSel && terakhir.surat) {
         suratSel.value = terakhir.surat;
@@ -8281,22 +8284,12 @@ window.delSetoran = function(id, fbId){
 window.hapusSemuaSetoran = function(){
   if(!dataSetoran.length){ showToast('Sudah kosong','warning'); return; }
   if(!confirm(`Hapus ${dataSetoran.length} riwayat setoran? Ini akan menghapus dari server juga!`)) return;
-  // Delete all from Firestore — chunked agar tidak melebihi batas 500 per batch
-  const fbIds = dataSetoran.map(s => s.fbId).filter(Boolean);
-  (async () => {
-    try {
-      const chunks = [];
-      for (let i = 0; i < fbIds.length; i += 400) chunks.push(fbIds.slice(i, i + 400));
-      for (const chunk of chunks) {
-        const batch = fbDb.batch();
-        chunk.forEach(fid => batch.delete(schoolCol('setoran').doc(fid)));
-        await batch.commit();
-      }
-      showToast('Semua riwayat dihapus dari server', 'success');
-    } catch(err) {
-      showToast('Error: ' + err.message, 'error');
-    }
-  })();
+  // Delete all from Firestore
+  const batch = fbDb.batch();
+  dataSetoran.forEach(s => { if(s.fbId) batch.delete(schoolCol('setoran').doc(s.fbId)); });
+  batch.commit().then(() => {
+    showToast('Semua riwayat dihapus dari server', 'success');
+  }).catch(err => showToast('Error: ' + err.message, 'error'));
   dataSetoran = [];
   ls.set('db_setoran', JSON.stringify(dataSetoran));
   renderTblSetoran();
@@ -8954,31 +8947,40 @@ async function hapusSemuaDataSiswa(){
   showToast('⏳ Menghapus data dari server...', 'warning', 8000);
 
   try {
-    // Helper: hapus koleksi dengan chunking otomatis (max 400/batch)
-    async function _hapusKoleksi(snap) {
-      if (!snap.docs.length) return;
-      const chunks = [];
-      for (let i = 0; i < snap.docs.length; i += 400) chunks.push(snap.docs.slice(i, i + 400));
-      for (const chunk of chunks) {
-        const b = fbDb.batch();
-        chunk.forEach(d => b.delete(d.ref));
-        await b.commit();
-      }
-    }
-
     // 1. Hapus semua dokumen siswa dari Firestore
-    await _hapusKoleksi(await schoolCol('siswa').get());
+    const snapSiswa = await schoolCol('siswa').get();
+    const batchSiswa = fbDb.batch();
+    snapSiswa.docs.forEach(d => batchSiswa.delete(d.ref));
+    if(snapSiswa.docs.length) await batchSiswa.commit();
 
     // 2. Hapus semua dokumen setoran dari Firestore
-    await _hapusKoleksi(await schoolCol('setoran').get());
+    const snapSetoran = await schoolCol('setoran').get();
+    const chunks = [];
+    for(let i=0; i<snapSetoran.docs.length; i+=400) chunks.push(snapSetoran.docs.slice(i,i+400));
+    for(const chunk of chunks){
+      const b = fbDb.batch();
+      chunk.forEach(d => b.delete(d.ref));
+      await b.commit();
+    }
 
     // 3. Hapus semua dokumen absensi dari Firestore
-    await _hapusKoleksi(await schoolCol('absensiHarian').get());
+    const snapAbsen = await schoolCol('absensiHarian').get();
+    const chunksAbsen = [];
+    for(let i=0; i<snapAbsen.docs.length; i+=400) chunksAbsen.push(snapAbsen.docs.slice(i,i+400));
+    for(const chunk of chunksAbsen){
+      const b = fbDb.batch();
+      chunk.forEach(d => b.delete(d.ref));
+      await b.commit();
+    }
 
     // 4. Hapus semua dokumen points dari Firestore
-    await _hapusKoleksi(await schoolCol('points').get());
+    const snapPoints = await schoolCol('points').get();
+    const batchPts = fbDb.batch();
+    snapPoints.docs.forEach(d => batchPts.delete(d.ref));
+    if(snapPoints.docs.length) await batchPts.commit();
 
-  } catch(err) {    console.warn('[hapusSemua] Firestore error:', err);
+  } catch(err) {
+    console.warn('[hapusSemua] Firestore error:', err);
     showToast('⚠️ Gagal hapus dari server, lanjut hapus cache lokal...', 'warning', 3000);
   }
 
@@ -9020,7 +9022,7 @@ document.addEventListener('DOMContentLoaded', function() {
     else { dot.className = ''; dot.title = 'Online'; }
   }
   if ('caches' in window) {
-    caches.keys().then(keys => keys.filter(k => k !== 'tamma-v6').forEach(k => caches.delete(k)));
+    caches.keys().then(keys => keys.filter(k => k !== 'tamma-v4').forEach(k => caches.delete(k)));
   }
   // Font size
   const savedFont = parseInt(localStorage.getItem('fontSize') || 14);
@@ -10479,10 +10481,7 @@ async function ssGabungSekolah() {
   try {
     // Cari sekolah dari kode
     const codeDoc = await fbDb.collection('schoolCodes').doc(kode).get();
-    if (!codeDoc.exists) {
-      _ssErr('ssErrGabung', 'Kode sekolah tidak ditemukan');
-      return;
-    }
+    if (!codeDoc.exists) return _ssErr('ssErrGabung', 'Kode sekolah tidak ditemukan');
 
     const { schoolId, nama: schoolNama } = codeDoc.data();
 
