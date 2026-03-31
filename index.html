@@ -3160,6 +3160,31 @@ span > .fai, div > .fai { vertical-align: middle; }
 /* Hapus outline default yang jelek di semua browser */
 :focus:not(:focus-visible) { outline: none; }
 
+/* ── Lock Landscape: tampilkan pesan putar HP di layar kecil ── */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: #0c4a2a;
+    z-index: 99998;
+  }
+  body::after {
+    content: '🔄  Putar HP ke posisi tegak';
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 20px;
+  }
+}
+
 /* ── Login Screen ── */
 
 </style>
@@ -4656,12 +4681,17 @@ function initAppUI(){
 
 // ─── Lock orientasi portrait (cegah rotasi otomatis) ──────────
 (function _lockOrientation(){
-  try {
-    const so = screen.orientation || window.screen.orientation;
-    if (so && typeof so.lock === 'function') {
-      so.lock('portrait').catch(() => {});
-    }
-  } catch(e) {}
+  function tryLock() {
+    try {
+      const so = screen.orientation || window.screen.orientation;
+      if (so && typeof so.lock === 'function') {
+        so.lock('portrait').catch(() => {});
+      }
+    } catch(e) {}
+  }
+  tryLock();
+  // Coba lock ulang saat orientation berubah (beberapa browser butuh ini)
+  screen.orientation?.addEventListener?.('change', tryLock);
 })();
 
 // ──────────────────────────────────────────────────────────
@@ -5282,7 +5312,7 @@ async function kkEksekusi() {
     start_url: base,
     scope: base,
     display: "standalone",
-    orientation: "any",
+    orientation: "portrait",
     background_color: "#0c4a2a",
     theme_color: "#0c4a2a",
     lang: "id",
