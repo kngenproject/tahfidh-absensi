@@ -9714,6 +9714,27 @@ async function simpanPencapaianAwal(){
     await schoolCol('points').doc(nama).set({
       total: userPoints[nama], streak: userStreaks[nama]||0
     }, { merge: true });
+
+    // Refresh dataSetoran dari Firestore agar semua record pencapaian awal
+    // mendapat fbId yang benar — mencegah duplikasi saat sync berikutnya.
+    const snapRefresh = await schoolCol('setoran')
+      .where('tahunAjaran','==', tahunAjaranAktif).get({ source: 'server' });
+    const _sortArr = arr => {
+      arr.sort((a, b) => {
+        const ta = a.inputAt?.toDate ? a.inputAt.toDate().getTime() : (a.id || 0);
+        const tb = b.inputAt?.toDate ? b.inputAt.toDate().getTime() : (b.id || 0);
+        if(tb !== ta) return tb - ta;
+        const ah = a.arahHafalan || b.arahHafalan || '';
+        if(ah === 'naba-nas') return (b.suratN || 0) - (a.suratN || 0);
+        if(ah === 'nas-naba') return (a.suratN || 0) - (b.suratN || 0);
+        return 0;
+      });
+      return arr;
+    };
+    dataSetoran = _sortArr(snapRefresh.docs.map(d => ({ fbId: d.id, ...d.data() })));
+    ls.set('db_setoran', JSON.stringify(dataSetoran));
+    renderTblSetoran && renderTblSetoran();
+    updateDashboard && updateDashboard();
   })().catch(err => console.warn('[FB] simpanPencapaianAwal:', err));
 
   renderTblSetoran();
