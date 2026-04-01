@@ -4519,15 +4519,18 @@ function _loadLocalData() {
 
 async function fetchAllData(){
   showSyncing();
+  // Selalu paksa ambil dari server Firestore, bukan dari cache offline
   const FROM_SERVER = { source: 'server' };
-  let syncSuccessful = false;
 
-  // ── Helper: sort setoran konsisten ──
+  // ── Helper: sort setoran konsisten (frontier surat pertama untuk pencapaian awal) ──
   function _sortSetoran(arr) {
     arr.sort((a, b) => {
       const ta = a.inputAt?.toDate ? a.inputAt.toDate().getTime() : (a.id || 0);
       const tb = b.inputAt?.toDate ? b.inputAt.toDate().getTime() : (b.id || 0);
       if(tb !== ta) return tb - ta;
+      // Tiebreaker untuk pencapaian awal (inputAt sama dalam satu batch):
+      // naba-nas → frontier = suratN tertinggi (sort desc)
+      // nas-naba → frontier = suratN terendah (sort asc)
       const ah = a.arahHafalan || b.arahHafalan || '';
       if(ah === 'naba-nas') return (b.suratN || 0) - (a.suratN || 0);
       if(ah === 'nas-naba') return (a.suratN || 0) - (b.suratN || 0);
@@ -4536,318 +4539,133 @@ async function fetchAllData(){
     return arr;
   }
 
-  // Gunakan Promise.race dengan timeout
-  const fetchWithTimeout = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Sync timeout: Server tidak merespons dalam 15 detik'));
-    }, 15000); // 15 detik timeout
-
-    (async () => {
-      try {
-        // Siswa — paksa dari server
-        const snapSiswa = await schoolCol('siswa').where('status','==','aktif').get(FROM_SERVER);
-        masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
-
-        // Setoran
-        const snapSetoran = await schoolCol('setoran')
-          .where('tahunAjaran','==', tahunAjaranAktif).get(FROM_SERVER);
-        dataSetoran = _sortSetoran(snapSetoran.docs.map(d => ({ fbId: d.id, ...d.data() })));
-
-        // Absensi hari ini
-        const todayKey = _localDateKey();
-        const snapAbsen = await schoolCol('absensiHarian').doc(todayKey).get(FROM_SERVER);
-        if(snapAbsen.exists){
-          const d = snapAbsen.data();
-          if(d.data && typeof d.data === 'object' && Object.keys(d.data).length > 0){
-            dataAbsensi = Object.entries(d.data).map(([nama, val]) => ({
-              nama, status: val.status, waktu: val.waktu, kelas: val.kelas,
-              inputBy: val.inputBy, inputByNama: val.inputByNama
-            }));
-          } else if(Array.isArray(d.siswa) && d.siswa.length > 0){
-            dataAbsensi = d.siswa.map(s => ({
-              nama: s.nama, status: s.status, waktu: s.waktu||'', kelas: s.kelas||'Umum',
-              inputBy: 'offline', inputByNama: ''
-            }));
-          } else {
-            dataAbsensi = [];
-          }
-        } else {
-          dataAbsensi = [];
-        }
-
-        // Points
-        const snapPoints = await schoolCol('points').get(FROM_SERVER);
-        userPoints = {}; userStreaks = {};
-        snapPoints.docs.forEach(d => {
-          userPoints[d.id] = d.data().total || 0;
-          userStreaks[d.id] = d.data().streak || 0;
-        });
-
-        syncSuccessful = true;
-        clearTimeout(timeout);
-        resolve();
-      } catch(e) {
-        clearTimeout(timeout);
-        reject(e);
-      }
-    })();
-  });
-
   try {
-    await fetchWithTimeout;
-    
-    // Render UI setelah sync sukses
-    renderDdSiswa && renderDdSiswa();
-    updateStrip && updateStrip();
-    renderSiswaCards && renderSiswaCards();
-    updateStatsAbsensi && updateStatsAbsensi();
-    renderRiwAbsensi && renderRiwAbsensi();
-    recalcAllStreaks && recalcAllStreaks();
-    renderTblSetoran && renderTblSetoran();
-    updateDashboard && updateDashboard();
-    
-    _lastSyncAt = Date.now();
-    ls.set('_lastSyncAt', String(_lastSyncAt));
-    
-    // Bersihkan cache absensi lama
-    const _cutoff = new Date();
-    _cutoff.setDate(_cutoff.getDate() - 60);
-    const _cutoffKey = _cutoff.toISOString().slice(0,10);
-    ls.keys().filter(k => k.startsWith('db_absensi_') && k !== 'db_absensi_harian').forEach(k => {
-      if(k.replace('db_absensi_','') < _cutoffKey) ls.remove(k);
+    // Siswa — paksa dari server agar hapus di Firebase Console langsung terefleksi
+    const snapSiswa = await schoolCol('siswa').where('status','==','aktif').get(FROM_SERVER);
+    masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
+
+    // Setoran
+    const snapSetoran = await schoolCol('setoran')
+      .where('tahunAjaran','==', tahunAjaranAktif).get(FROM_SERVER);
+    dataSetoran = _sortSetoran(snapSetoran.docs.map(d => ({ fbId: d.id, ...d.data() })));
+
+    // Absensi hari ini
+    const todayKey = _localDateKey();
+    const snapAbsen = await schoolCol('absensiHarian').doc(todayKey).get(FROM_SERVER);
+    if(snapAbsen.exists){
+      const d = snapAbsen.data();
+      // Coba baca dari field 'data' (object by nama) dulu, lalu fallback ke 'siswa' (array)
+      if(d.data && typeof d.data === 'object' && Object.keys(d.data).length > 0){
+        dataAbsensi = Object.entries(d.data).map(([nama, val]) => ({
+          nama, status: val.status, waktu: val.waktu, kelas: val.kelas,
+          inputBy: val.inputBy, inputByNama: val.inputByNama
+        }));
+      } else if(Array.isArray(d.siswa) && d.siswa.length > 0){
+        dataAbsensi = d.siswa.map(s => ({
+          nama: s.nama, status: s.status, waktu: s.waktu||'', kelas: s.kelas||'Umum',
+          inputBy: 'offline', inputByNama: ''
+        }));
+      } else {
+        dataAbsensi = [];
+      }
+    } else {
+      dataAbsensi = [];
+    }
+
+    // Points
+    const snapPoints = await schoolCol('points').get(FROM_SERVER);
+    userPoints = {}; userStreaks = {};
+    snapPoints.docs.forEach(d => {
+      userPoints[d.id] = d.data().total || 0;
+      userStreaks[d.id] = d.data().streak || 0;
     });
-    
-    console.log('[SYNC] ✓ Sync successful at', new Date().toLocaleTimeString('id-ID'));
-    showSyncDone();
-    
+
   } catch(e){
-    console.warn('[SYNC] Fetch dari server gagal:', e.message);
-    showToast('Sinkronisasi gagal, menggunakan data cache...', 'warning', 3000);
-    
-    // FALLBACK 1: Coba cache Firestore
+    console.warn('[FB] fetchAllData gagal dari server, coba cache Firestore:', e);
+    showToast('Tidak bisa ke server, pakai data cache', 'warning', 3000);
+    // Fallback ke cache Firestore offline (bukan localStorage)
     try {
-      console.log('[SYNC] Mencoba fallback ke Firestore cache...');
       const snapSiswa = await schoolCol('siswa').where('status','==','aktif').get({ source: 'cache' });
       masterSiswa = snapSiswa.docs.map(d => ({ fbId: d.id, ...d.data() }));
-      
       const snapSetoran = await schoolCol('setoran').where('tahunAjaran','==', tahunAjaranAktif).get({ source: 'cache' });
       dataSetoran = _sortSetoran(snapSetoran.docs.map(d => ({ fbId: d.id, ...d.data() })));
-      
       const snapPoints = await schoolCol('points').get({ source: 'cache' });
       snapPoints.docs.forEach(d => {
         userPoints[d.id] = d.data().total || 0;
         userStreaks[d.id] = d.data().streak || 0;
       });
-      
+      // Load absensi hari ini dari cache per-tanggal (support offline multi-hari)
       const _todayCacheKey = _localDateKey();
       const _absensiToday = ls.get(`db_absensi_${_todayCacheKey}`);
       dataAbsensi = _absensiToday ? JSON.parse(_absensiToday) : JSON.parse(ls.get('db_absensi_harian') || '[]');
-      
-      console.log('[SYNC] ✓ Fallback ke Firestore cache berhasil');
-      syncSuccessful = true;
-      
     } catch(e2) {
-      console.warn('[SYNC] Firestore cache juga gagal:', e2.message);
-      
-      // FALLBACK 2: Coba localStorage
-      try {
-        console.log('[SYNC] Mencoba fallback ke localStorage...');
-        masterSiswa  = JSON.parse(ls.get('db_master_siswa')||'[]');
-        dataSetoran  = JSON.parse(ls.get('db_setoran')||'[]');
-        dataAbsensi  = JSON.parse(ls.get('db_absensi_harian')||'[]');
-        userPoints   = JSON.parse(ls.get('db_points')||'{}');
-        userStreaks   = JSON.parse(ls.get('db_streaks')||'{}');
-        
-        console.log('[SYNC] ✓ Fallback ke localStorage berhasil');
-        syncSuccessful = true;
-        
-      } catch(e3) {
-        console.error('[SYNC] ✗ Semua fallback gagal:', e3.message);
-        showToast('⚠️ Gagal memuat data. Coba refresh atau cek koneksi.', 'error', 5000);
-        syncSuccessful = false;
-      }
+      console.warn('[FB] Cache Firestore juga gagal, pakai localStorage:', e2);
+      masterSiswa  = JSON.parse(ls.get('db_master_siswa')||'[]');
+      dataSetoran  = JSON.parse(ls.get('db_setoran')||'[]');
+      dataAbsensi  = JSON.parse(ls.get('db_absensi_harian')||'[]');
+      userPoints   = JSON.parse(ls.get('db_points')||'{}');
+      userStreaks   = JSON.parse(ls.get('db_streaks')||'{}');
     }
   }
 
-  // Render UI bahkan jika ada fallback
-  if(syncSuccessful) {
-    renderDdSiswa && renderDdSiswa();
-    updateStrip && updateStrip();
-    renderSiswaCards && renderSiswaCards();
-    updateStatsAbsensi && updateStatsAbsensi();
-    renderRiwAbsensi && renderRiwAbsensi();
-    recalcAllStreaks && recalcAllStreaks();
-    renderTblSetoran && renderTblSetoran();
-    updateDashboard && updateDashboard();
-  }
-  
+  // Render semua UI
+  renderDdSiswa && renderDdSiswa();
+  updateStrip && updateStrip();
+  renderSiswaCards && renderSiswaCards();
+  updateStatsAbsensi && updateStatsAbsensi();
+  renderRiwAbsensi && renderRiwAbsensi();
+  recalcAllStreaks && recalcAllStreaks();
+  renderTblSetoran && renderTblSetoran();
+  updateDashboard && updateDashboard();
+  _lastSyncAt = Date.now();
+  ls.set('_lastSyncAt', String(_lastSyncAt));
+  // Bersihkan cache absensi per-tanggal yang sudah > 60 hari
+  const _cutoff = new Date(); _cutoff.setDate(_cutoff.getDate() - 60);
+  const _cutoffKey = _cutoff.toISOString().slice(0,10);
+  ls.keys().filter(k => k.startsWith('db_absensi_') && k !== 'db_absensi_harian').forEach(k => {
+    if(k.replace('db_absensi_','') < _cutoffKey) ls.remove(k);
+  });
   showSyncDone();
 }
 
-// ════════════════════════════════════════════════════════════════
-// IMPROVED SYNC SYSTEM — Mengatasi layar mati & koneksi terputus
-// ════════════════════════════════════════════════════════════════
+// Refresh manual
+// Sync saat tab/app ditutup atau di-background
+// ── Sinkronisasi otomatis saat buka / tutup app ─────────────────
+// Catat kapan app terakhir di-background dan kapan terakhir sync
+let _hiddenAt = null;     // timestamp saat masuk background
+let _lastSyncAt = Date.now(); // timestamp saat terakhir fetch dari Firestore
+const _MIN_BG_MS = 30_000; // min waktu background (30 detik) sebelum re-fetch
 
-let _hiddenAt = null;           // timestamp saat masuk background
-let _lastSyncAt = Date.now();   // timestamp saat terakhir sync sukses
-let _isSyncing = false;         // flag saat sync sedang berjalan
-let _syncRetryCount = 0;        // counter retry
-const _MIN_BG_MS = 15_000;      // min waktu background (15 detik) sebelum re-fetch
-const _MAX_RETRIES = 3;         // max retry attempts
-const _RETRY_DELAY_MS = 2000;   // delay antar retry (2 detik)
-
-// Fungsi untuk retry sync dengan exponential backoff
-async function retrySyncWithBackoff(attempt = 1) {
-  if(attempt > _MAX_RETRIES) {
-    console.warn('[SYNC] Max retries reached, using cache');
-    showToast('Data mungkin tidak terbaru. Mode offline.', 'warning', 4000);
-    return false;
-  }
-
-  const delay = _RETRY_DELAY_MS * (attempt - 1); // exponential backoff
-  if(attempt > 1) {
-    console.log(`[SYNC] Retry attempt ${attempt}/${_MAX_RETRIES} after ${delay}ms`);
-    await new Promise(r => setTimeout(r, delay));
-  }
-
-  try {
-    await fetchAllData();
-    _syncRetryCount = 0;
-    return true;
-  } catch(e) {
-    console.warn(`[SYNC] Attempt ${attempt} failed:`, e.message);
-    return await retrySyncWithBackoff(attempt + 1);
-  }
-}
-
-// Event: Layar mati / app masuk background
 document.addEventListener('visibilitychange', () => {
-  if(!currentUser || !currentSchoolId) return;
-  
+  if(!currentUser || !currentSchoolId) return; // jangan jalan jika belum login/sekolah
   if(document.visibilityState === 'hidden'){
-    // ── BACKGROUND: Simpan state lokal ──
-    console.log('[SYNC] App entering background');
+    // ── TUTUP / BACKGROUND: simpan ke localStorage ──
     _hiddenAt = Date.now();
-    
     try {
-      // Cache semua data untuk offline use
       ls.set('db_setoran', JSON.stringify(dataSetoran));
       ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
       ls.set('db_master_siswa', JSON.stringify(masterSiswa));
       ls.set('db_points', JSON.stringify(userPoints));
       ls.set('db_streaks', JSON.stringify(userStreaks));
       ls.set('_lastSyncAt', String(_lastSyncAt));
-      ls.set('_isSyncing', 'false'); // reset flag
-    } catch(e) { 
-      console.warn('[SYNC] localStorage save error:', e); 
-    }
+    } catch(e) { console.warn('[visibility] save error:', e); }
 
   } else if(document.visibilityState === 'visible'){
-    // ── FOREGROUND: Trigger sync jika sudah lama offline ──
-    console.log('[SYNC] App resuming from background');
-    
+    // ── BUKA / KEMBALI KE FOREGROUND: re-fetch jika sudah lama di background ──
     const bgDuration = _hiddenAt ? Date.now() - _hiddenAt : Infinity;
     _hiddenAt = null;
 
-    // Cegah sync ganda
-    if(_isSyncing) {
-      console.log('[SYNC] Sync already in progress, skipping');
-      return;
+    if(bgDuration >= _MIN_BG_MS){
+      // Sudah ≥30 detik di background → ambil data terbaru dari Firestore
+      if(typeof fetchAllData === 'function' && currentSchoolId){
+        fetchAllData().then(() => {
+          _lastSyncAt = Date.now();
+          ls.set('_lastSyncAt', String(_lastSyncAt));
+        }).catch(e => console.warn('[visibility] fetchAllData error:', e));
+      }
     }
-
-    // Jika sudah > 15 detik di background → sync
-    if(bgDuration >= _MIN_BG_MS && currentSchoolId){
-      console.log(`[SYNC] Background duration: ${bgDuration}ms, triggering sync`);
-      _isSyncing = true;
-      
-      retrySyncWithBackoff(1)
-        .then(success => {
-          _isSyncing = false;
-          if(!success) {
-            console.warn('[SYNC] Sync failed after retries');
-          }
-        })
-        .catch(e => {
-          _isSyncing = false;
-          console.error('[SYNC] Unexpected sync error:', e);
-        });
-    }
+    // Jika < 30 detik (misal switch tab sebentar), tidak perlu fetch ulang
   }
-});
-
-// Event: Koneksi online/offline
-window.addEventListener('online', () => {
-  console.log('[NET] Connection restored');
-  const dot = document.getElementById('netDot');
-  if(dot){ dot.className = ''; dot.title = 'Online'; }
-  
-  // Langsung sync saat connection kembali
-  if(!_isSyncing && currentSchoolId) {
-    console.log('[NET] Connection restored, triggering immediate sync');
-    _isSyncing = true;
-    retrySyncWithBackoff(1)
-      .then(() => { _isSyncing = false; })
-      .catch(e => { 
-        _isSyncing = false;
-        console.warn('[NET] Online sync error:', e);
-      });
-  }
-});
-
-window.addEventListener('offline', () => {
-  console.log('[NET] Connection lost');
-  const dot = document.getElementById('netDot');
-  if(dot){ dot.className = 'offline'; dot.title = 'Offline'; }
-  if (typeof showToast === 'function') {
-    showToast('Mode offline — data lokal akan digunakan', 'info', 4000);
-  }
-});
-
-// ── PERIODIC SYNC: Setiap 5 menit saat app aktif ──
-let _periodicSyncInterval = null;
-function startPeriodicSync(){
-  if(_periodicSyncInterval) return; // Jangan duplikat
-  
-  console.log('[SYNC] Starting periodic sync (every 5 min)');
-  _periodicSyncInterval = setInterval(() => {
-    if(!currentUser || !currentSchoolId) return;
-    if(document.hidden) return; // Jangan sync jika app backgrounded
-    if(_isSyncing) {
-      console.log('[SYNC] Sync already in progress, skipping periodic');
-      return;
-    }
-    
-    console.log('[SYNC] Periodic sync triggered');
-    _isSyncing = true;
-    fetchAllData()
-      .then(() => { _isSyncing = false; })
-      .catch(e => {
-        _isSyncing = false;
-        console.warn('[SYNC] Periodic sync error:', e);
-      });
-  }, 5 * 60 * 1000); // 5 menit
-}
-
-function stopPeriodicSync(){
-  if(_periodicSyncInterval) {
-    clearInterval(_periodicSyncInterval);
-    _periodicSyncInterval = null;
-    console.log('[SYNC] Periodic sync stopped');
-  }
-}
-
-// Start periodic sync saat app fully loaded
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    if(currentUser && currentSchoolId) {
-      startPeriodicSync();
-    }
-  }, 2000);
-});
-
-// Stop periodic sync saat user logout
-window.addEventListener('beforeunload', () => {
-  stopPeriodicSync();
 });
 
 // ─── Sync indicator ────────────────────────────────────────────
