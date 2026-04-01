@@ -3820,64 +3820,59 @@ span > .fai, div > .fai { vertical-align: middle; }
       </div>
     </div>
 
-    <!-- TAB 5 — PENGATURAN (REFACTORED) -->
+    <!-- TAB 5 — TENTANG -->
     <div class="pg" id="pg5">
 
-      <!-- ── SECTION: Profil & Info ── -->
-      <div class="card" style="background: linear-gradient(135deg, var(--g9) 0%, var(--g8) 100%); color: #fff; padding: 20px; border-radius: var(--r); margin-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
-          <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0;">👤</div>
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 700; font-size: var(--flg); margin-bottom: 2px;" id="settingsUserName">—</div>
-            <div style="font-size: var(--fsm); opacity: 0.9;" id="settingsUserEmail">—</div>
-          </div>
-        </div>
-        <div style="font-size: var(--fsm); line-height: 1.5; opacity: 0.85;">Guru/Admin terdaftar di sistem. Keluar untuk login dengan akun berbeda.</div>
-      </div>
-
-      <!-- ── SECTION: Data Siswa ── -->
+      <!-- ── CARD: Import Data Siswa ── -->
       <div class="card">
-        <div class="chd" style="margin-bottom: 10px;">
-          <span>📚 Data Siswa</span>
+        <div class="chd">
+          <span>
+            <svg class="fai" viewBox="0 0 640 512" aria-hidden="true"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192h42.7c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0H21.3C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7h42.7C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3H405.3zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352H378.7C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7H154.7c-14.7 0-26.7-11.9-26.7-26.7z"/></svg>
+            Data Siswa
+          </span>
+          <div id="istripLbl2" style="font-size:var(--fxs);color:var(--mut);"></div>
         </div>
         <div class="cbd">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <label class="btn bp" for="xlsIn" style="display: inline-flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; font-size: var(--fsm); padding: 8px;">
-              <svg viewBox="0 0 512 512" style="width: 13px; height: 13px; fill: currentColor;"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64z"/></svg>
-              Import
+          <div id="istripSub2" style="font-size:var(--fsm);color:var(--mut);margin-bottom:10px;">Import daftar siswa dari file Excel (.xlsx) atau tambah manual satu per satu.</div>
+          <div class="brow" style="gap:8px;flex-wrap:wrap;">
+            <label class="btn bp bsm" for="xlsIn" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;">
+              <svg class="fai" viewBox="0 0 512 512" aria-hidden="true"><path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64z"/></svg>
+              Import Excel
             </label>
             <input type="file" id="xlsIn" accept=".xlsx,.xls" style="display:none" onchange="importMasterData(this)">
-            <button class="btn bo" onclick="openTambahSiswaManual()" style="font-size: var(--fsm); padding: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-              <svg viewBox="0 0 448 512" style="width: 13px; height: 13px; fill: currentColor;"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg>
-              Tambah
-            </button>
+            <button class="btn bo bsm" onclick="openTambahSiswaManual()" style="flex:1;">+ Tambah Manual</button>
           </div>
-          <div style="font-size: var(--fxs); color: var(--mut); margin-top: 8px; line-height: 1.4;">Import dari Excel atau tambah siswa satu per satu</div>
         </div>
       </div>
 
-      <!-- ── SECTION: Pencapaian Awal ── -->
+      <!-- ── CARD: Pencapaian Awal ── -->
       <div class="card">
-        <div class="chd" style="margin-bottom: 10px;">
-          <span>⭐ Pencapaian Awal</span>
+        <div class="chd">
+          <span>
+            <svg class="fai" viewBox="0 0 576 512" aria-hidden="true"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+            Pencapaian Awal Siswa
+          </span>
         </div>
         <div class="cbd">
-          <button class="btn bfull" onclick="openPencapaian()" style="background: linear-gradient(135deg, #f9a825, #e6b830); color: #2a1800; border: none; font-weight: 700; font-size: var(--fmd); padding: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%;">
-            <svg viewBox="0 0 576 512" style="width: 15px; height: 15px; fill: currentColor;"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
+          <div style="font-size:var(--fsm);color:var(--mut);margin-bottom:10px;line-height:1.5;">Catat posisi hafalan awal siswa sebelum menggunakan aplikasi ini.</div>
+          <button class="btn bfull" onclick="openPencapaian()"
+            style="background:linear-gradient(135deg,#f9a825,#e6b830); color:#2a1800; border:none; font-weight:800; gap:8px;">
+            <svg class="fai" viewBox="0 0 576 512" aria-hidden="true"><path d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/></svg>
             Input Pencapaian Awal
           </button>
-          <div style="font-size: var(--fxs); color: var(--mut); margin-top: 8px; line-height: 1.4;">Catat posisi hafalan siswa sebelum tracking dimulai</div>
         </div>
       </div>
 
-      <!-- ── SECTION: Riwayat Setoran ── -->
+      <!-- ── CARD: Riwayat Setoran ── -->
       <div class="card">
-        <div class="chd" style="margin-bottom: 10px;">
-          <span>📊 Riwayat Setoran</span>
-          <span class="bdg bg" id="totSetoran">0</span>
+        <div class="chd">
+          <span><svg class="fai" viewBox="0 0 512 512" aria-hidden="true"><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg>Riwayat Setoran</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="bdg bg" id="totSetoran">0</span>
+          </div>
         </div>
         <!-- Filter kelas -->
-        <div id="filterKelasSetoran" style="padding: 0; display:none; margin-bottom: 8px;">
+        <div id="filterKelasSetoran" style="padding:6px 12px 0; display:none;">
           <div id="chipsKelasSetoran" class="frow" style="flex-wrap:wrap; margin-bottom:0;"></div>
         </div>
         <!-- List tanggal -->
@@ -3889,6 +3884,13 @@ span > .fai, div > .fai { vertical-align: middle; }
         </div>
         <!-- hidden tbody agar kode lama tidak error -->
         <table style="display:none"><tbody id="tblSetoran"></tbody></table>
+      </div>
+
+      <div class="ab-hero">
+        <div class="aico">📖</div>
+        <h2>TAMMA</h2>
+        <p>Manajemen Tahfidh Juz Amma & Absensi Siswa</p>
+        <span class="aver">Versi 2.3.5</span>
       </div>
 
       <!-- ── Info Sekolah ── -->
@@ -4049,13 +4051,6 @@ span > .fai, div > .fai { vertical-align: middle; }
         </ul>
       </div>
 
-      <div class="ab-hero">
-        <div class="aico">📖</div>
-        <h2>TAMMA</h2>
-        <p>Manajemen Tahfidh Juz Amma & Absensi Siswa</p>
-        <span class="aver">Versi 2.3.5</span>
-      </div>
-
 <div class="card">
   <div class="chd"><svg class="fai" viewBox="0 0 448 512" aria-hidden="true"><path d="M448 80v48c0 44.2-100.3 80-224 80S0 172.2 0 128V80C0 35.8 100.3 0 224 0S448 35.8 448 80zM393.2 214.7c20.8-7.4 39.9-16.9 54.8-28.6V288c0 44.2-100.3 80-224 80S0 332.2 0 288V186.1c14.9 11.8 34 21.2 54.8 28.6C99.7 230.7 159.5 240 224 240s124.3-9.3 169.2-25.3zM0 346.1c14.9 11.8 34 21.2 54.8 28.6C99.7 390.7 159.5 400 224 400s124.3-9.3 169.2-25.3c20.8-7.4 39.9-16.9 54.8-28.6V432c0 44.2-100.3 80-224 80S0 476.2 0 432V346.1z"/></svg>Data Siswa Tersimpan</div>
   <div class="cbd">
@@ -4118,28 +4113,32 @@ span > .fai, div > .fai { vertical-align: middle; }
               Sinkronisasi Ulang
             </button>
             <button class="btn bd bsm" onclick="bersihkanCacheLokal()" style="flex:1;">
-              🗑 Bersihkan Cache
+              🗑 Bersihkan Cache Lokal
             </button>
           </div>
         </div>
       </div>
 
-      <!-- ── SECTION: Keluar Akun ── -->
-      <div class="card" style="background: #fff3cd; padding: 14px; border-radius: var(--rs); border-left: 3px solid var(--yel);">
-        <div style="font-size: var(--fmd); font-weight: 700; color: #2a1800; margin-bottom: 6px;">⚠️ Keluar Akun</div>
-        <div style="font-size: var(--fsm); color: #2a1800; margin-bottom: 10px; opacity: 0.85;">Anda akan logout dari sistem. Login ulang diperlukan untuk akses kembali.</div>
-        <button class="btn bd bsm" style="width:100%;" onclick="lpLogout()">
-          <svg viewBox="0 0 512 512" style="width: 13px; height: 13px; fill: currentColor;"><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"/></svg>
-          Keluar Sekarang
-        </button>
+      <div class="card" id="cardAkun">
+        <div class="chd">👤 Akun Saya</div>
+        <div class="cbd">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+            <div id="settingsAvatar" style="width:46px;height:46px;border-radius:50%;background:var(--g4);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;overflow:hidden;">👤</div>
+            <div style="flex:1;min-width:0;">
+              <div id="settingsUserName" style="font-weight:800;font-size:var(--fmd);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+              <div id="settingsUserEmail" style="font-size:var(--fsm);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+            </div>
+          </div>
+          <button class="btn bd bsm" style="width:100%;" onclick="lpLogout()">
+            <svg class="fai" viewBox="0 0 512 512" aria-hidden="true"><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"/></svg>
+            Keluar (Logout)
+          </button>
+        </div>
       </div>
 
-      <!-- ── FOOTER ── -->
-      <div style="padding: 16px 12px; text-align: center; border-top: 1px solid var(--brd); margin-top: 16px;">
-        <div style="font-size: var(--fxs); color: var(--mut); line-height: 1.6; margin-bottom: 8px;">
-          📱 <strong>TAMMA</strong> — Tahfidh Juz Amma<br>
-          <span style="font-size: var(--fxs);">v1.0 • Data aman tersimpan di cloud</span>
-        </div>
+      <div class="ab-foot">
+        Data disimpan di Firebase Firestore &amp; cache lokal perangkat.<br><br>
+        <strong style="color:var(--g7)">TAMMA</strong> — Tahfidh & Absensi
       </div>
     </div>
 
@@ -9715,27 +9714,6 @@ async function simpanPencapaianAwal(){
     await schoolCol('points').doc(nama).set({
       total: userPoints[nama], streak: userStreaks[nama]||0
     }, { merge: true });
-
-    // Refresh dataSetoran dari Firestore agar semua record pencapaian awal
-    // mendapat fbId yang benar — mencegah duplikasi saat sync berikutnya.
-    const snapRefresh = await schoolCol('setoran')
-      .where('tahunAjaran','==', tahunAjaranAktif).get({ source: 'server' });
-    const _sortArr = arr => {
-      arr.sort((a, b) => {
-        const ta = a.inputAt?.toDate ? a.inputAt.toDate().getTime() : (a.id || 0);
-        const tb = b.inputAt?.toDate ? b.inputAt.toDate().getTime() : (b.id || 0);
-        if(tb !== ta) return tb - ta;
-        const ah = a.arahHafalan || b.arahHafalan || '';
-        if(ah === 'naba-nas') return (b.suratN || 0) - (a.suratN || 0);
-        if(ah === 'nas-naba') return (a.suratN || 0) - (b.suratN || 0);
-        return 0;
-      });
-      return arr;
-    };
-    dataSetoran = _sortArr(snapRefresh.docs.map(d => ({ fbId: d.id, ...d.data() })));
-    ls.set('db_setoran', JSON.stringify(dataSetoran));
-    renderTblSetoran && renderTblSetoran();
-    updateDashboard && updateDashboard();
   })().catch(err => console.warn('[FB] simpanPencapaianAwal:', err));
 
   renderTblSetoran();
