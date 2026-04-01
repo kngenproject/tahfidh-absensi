@@ -3774,10 +3774,8 @@ span > .fai, div > .fai { vertical-align: middle; }
           </div>
           <!-- Riwayat Hafalan Terakhir Siswa (muncul setelah pilih siswa) -->
           <div id="siswaHafalanHistory" style="display:none; margin-top:8px; background:var(--g0); border:1.5px solid var(--brd); border-radius:var(--rs); padding:10px; font-size:var(--fsm);"></div>
-
-        <!-- Ganti bagian Juz dan Surat di form setoran (sekitar baris 1190-1210) dengan kode berikut -->
 <!-- Juz & Surat dalam satu baris -->
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+          <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px; margin-bottom:12px;">
   <div>
     <label class="flbl">Juz</label>
     <button type="button" class="csd-trigger placeholder" id="juzSelectTrigger" onclick="openCsd('juzSelect','📚 Pilih Juz')" style="width:100%;">
@@ -3795,7 +3793,6 @@ span > .fai, div > .fai { vertical-align: middle; }
     <select id="surat" style="display:none;" onchange="renderAyatList();"></select>
   </div>
 </div>
-
           <!-- Dari & Sampai Ayat dalam satu baris (2 kolom) -->
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
             <div>
