@@ -824,14 +824,14 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
 }
 .lhdr { 
   display:grid; 
-  grid-template-columns: minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(80px, 0.9fr) minmax(60px, 0.8fr) !important; 
+  grid-template-columns: 2fr 1.5fr 40px 1fr !important; 
   padding:8px 10px; 
   background:var(--g8); 
   border-radius:8px 8px 0 0; 
   font-size:var(--fmd); 
   font-weight:700; 
   color:rgba(255,255,255,.9); 
-  gap:6px; 
+  gap:4px; 
 }
 .lhdr span:nth-child(3) { text-align:center; }
 .lbody { 
@@ -841,11 +841,11 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
 }
 .lrow { 
   display:grid; 
-  grid-template-columns: minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(80px, 0.9fr) minmax(60px, 0.8fr) !important; 
+  grid-template-columns: 2fr 1.5fr 40px 1fr !important; 
   padding:10px; 
   border-bottom:1px solid var(--brd); 
   align-items:center; 
-  gap:6px; 
+  gap:4px; 
   position:relative;
   cursor:pointer;
 }
@@ -853,9 +853,8 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
 .cn { 
   display:flex; 
   flex-direction:column; 
-  gap:3px; 
+  gap:2px; 
   min-width: 0;
-  overflow: hidden;
 }
 .cnn { 
   font-weight:700; 
@@ -868,9 +867,6 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
 .cnd { 
   font-size:var(--fsm); 
   color:#999; 
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .cnt { 
   display:inline-block; 
@@ -888,24 +884,20 @@ input[type=search]:focus, textarea:focus { font-size: 16px; }
 .cs { 
   display:flex; 
   flex-direction:column; 
-  gap:3px; 
+  gap:2px; 
   min-width: 0;
-  overflow: hidden;
 }
 .css { 
   font-size:var(--fmd); 
   font-weight:700; 
-  color:var(--g8);
+  color:var(--g7);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .csa { 
-  font-size:var(--fsm); 
-  color:#888; 
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size:var(--fmd); 
+  color:var(--mut); 
 }
 .cst { 
   display:flex; 
@@ -3258,8 +3250,7 @@ span > .fai, div > .fai { vertical-align: middle; }
 
 .detail-card-section {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
-  padding-top: 10px;
-  padding-bottom: 6px;
+  padding-top: 8px;
 }
 
 .detail-card-label {
@@ -3267,7 +3258,7 @@ span > .fai, div > .fai { vertical-align: middle; }
   font-weight: 700;
   color: var(--mut);
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   letter-spacing: 0.3px;
 }
 
@@ -3432,66 +3423,6 @@ span > .fai, div > .fai { vertical-align: middle; }
 .csd-row:last-child { border-bottom: none; }
 .csd-row:active { background: var(--g1); }
 .csd-row.selected { background: #f0faf4; }
-
-/* ── Grid Layout untuk CSD ── */
-.csd-body.grid-mode {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  gap: 8px;
-  padding: 12px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.csd-body.grid-mode .csd-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 8px;
-  border: 1.5px solid var(--brd);
-  border-radius: var(--rs);
-  border-bottom: 1.5px solid var(--brd);
-  min-height: 80px;
-  gap: 4px;
-  text-align: center;
-  background: var(--surf);
-  transition: all .15s;
-}
-
-.csd-body.grid-mode .csd-row:active {
-  background: var(--g1);
-  border-color: var(--g5);
-}
-
-.csd-body.grid-mode .csd-row.selected {
-  background: var(--g1);
-  border-color: var(--g6);
-  box-shadow: 0 0 0 2px var(--g6);
-}
-
-.csd-body.grid-mode .csd-row-num {
-  display: none;
-}
-
-.csd-body.grid-mode .csd-row-name {
-  font-size: var(--fsm);
-  font-weight: 600;
-  white-space: normal;
-  word-break: break-word;
-  overflow: visible;
-  text-overflow: initial;
-  line-height: 1.2;
-}
-
-.csd-body.grid-mode .csd-row-check {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--g6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
 /* ── Nomor urut ── */
 .csd-row-num {
@@ -4098,7 +4029,7 @@ span > .fai, div > .fai { vertical-align: middle; }
           <!-- Siswa -->
           <div style="margin-bottom:12px;">
             <label class="flbl">Nama Siswa</label>
-            <button type="button" class="csd-trigger placeholder" id="namaSiswaTrigger" onclick="openCsdGridSiswa('namaSiswa','👤 Pilih Siswa')" style="width:100%;">
+            <button type="button" class="csd-trigger placeholder" id="namaSiswaTrigger" onclick="openCsdSiswa('namaSiswa')" style="width:100%;">
               <span id="namaSiswaLabel">— Pilih Siswa —</span>
               <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
             </button>
@@ -4110,7 +4041,7 @@ span > .fai, div > .fai { vertical-align: middle; }
           <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px; margin-bottom:12px;">
   <div>
     <label class="flbl">Juz</label>
-    <button type="button" class="csd-trigger placeholder" id="juzSelectTrigger" onclick="openCsdGrid('juzSelect','📚 Pilih Juz')" style="width:100%;">
+    <button type="button" class="csd-trigger placeholder" id="juzSelectTrigger" onclick="openCsd('juzSelect','📚 Pilih Juz')" style="width:100%;">
       <span id="juzSelectLabel">30</span>
       <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
     </button>
@@ -4118,14 +4049,18 @@ span > .fai, div > .fai { vertical-align: middle; }
   </div>
   <div>
     <label class="flbl">Surat</label>
-    <select id="surat" onchange="renderAyatList();"></select>
+    <button type="button" class="csd-trigger placeholder" id="suratTrigger" onclick="openCsd('surat','📖 Pilih Surat')" style="width:100%;">
+      <span id="suratLabel">— Pilih Surat —</span>
+      <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
+    </button>
+    <select id="surat" style="display:none;" onchange="renderAyatList();"></select>
   </div>
 </div>
           <!-- Dari & Sampai Ayat dalam satu baris (2 kolom) -->
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
             <div>
               <label class="flbl">Dari Ayat</label>
-              <button type="button" class="csd-trigger placeholder" id="ayatMulaiTrigger" onclick="openCsdGrid('ayatMulai','Dari Ayat')" style="width:100%;">
+              <button type="button" class="csd-trigger placeholder" id="ayatMulaiTrigger" onclick="openCsd('ayatMulai','Dari Ayat')" style="width:100%;">
                 <span id="ayatMulaiLabel">—</span>
                 <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
               </button>
@@ -4133,7 +4068,7 @@ span > .fai, div > .fai { vertical-align: middle; }
             </div>
             <div>
               <label class="flbl">Sampai Ayat</label>
-              <button type="button" class="csd-trigger placeholder" id="ayatSampaiTrigger" onclick="openCsdGrid('ayatSampai','Sampai Ayat')" style="width:100%;">
+              <button type="button" class="csd-trigger placeholder" id="ayatSampaiTrigger" onclick="openCsd('ayatSampai','Sampai Ayat')" style="width:100%;">
                 <span id="ayatSampaiLabel">—</span>
                 <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
               </button>
@@ -4145,7 +4080,7 @@ span > .fai, div > .fai { vertical-align: middle; }
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
             <div>
               <label class="flbl">Status</label>
-              <button type="button" class="csd-trigger" id="statLancarTrigger" onclick="openCsdGrid('statLancar','Status Hafalan')" style="width:100%;">
+              <button type="button" class="csd-trigger" id="statLancarTrigger" onclick="openCsd('statLancar','Status Hafalan')" style="width:100%;">
                 <span id="statLancarLabel">✅ Lancar</span>
                 <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
               </button>
@@ -4156,7 +4091,7 @@ span > .fai, div > .fai { vertical-align: middle; }
             </div>
             <div>
               <label class="flbl">Tambahan</label>
-              <button type="button" class="csd-trigger placeholder" id="tambahanTrigger" onclick="openCsdGrid('tambahan','Keterangan Tambahan')" style="width:100%;">
+              <button type="button" class="csd-trigger placeholder" id="tambahanTrigger" onclick="openCsd('tambahan','Keterangan Tambahan')" style="width:100%;">
                 <span id="tambahanLabel">— Pilih —</span>
                 <span class="csd-trigger-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg></span>
               </button>
@@ -5173,114 +5108,43 @@ async function fetchAllData(){
 
 // Refresh manual
 // Sync saat tab/app ditutup atau di-background
-// ── Sinkronisasi otomatis saat buka / tutup app dengan PERSISTENT CHECKPOINT ─────────
+// ── Sinkronisasi otomatis saat buka / tutup app ─────────────────
 // Catat kapan app terakhir di-background dan kapan terakhir sync
-// FIXES: Recover state even if app is force-killed or crashes
-const _MIN_BG_MS = 10_000; // min waktu background (10 detik) sebelum re-fetch — LOWERED untuk lebih aggressive
-const LS_HIDDEN_AT = '_hiddenAt_checkpoint';
-const LS_LAST_SYNC = '_lastSyncAt_checkpoint';
-
-let _hiddenAt = null;     // timestamp saat masuk background (in-memory)
+let _hiddenAt = null;     // timestamp saat masuk background
 let _lastSyncAt = Date.now(); // timestamp saat terakhir fetch dari Firestore
-
-// Helper: restore checkpoint dari localStorage saat app start
-function restoreSyncCheckpoint(){
-  try {
-    const savedSync = ls.get(LS_LAST_SYNC);
-    if(savedSync) _lastSyncAt = parseInt(savedSync, 10) || Date.now();
-    console.log('[checkpoint] restored _lastSyncAt from localStorage:', _lastSyncAt);
-  } catch(e) { console.warn('[checkpoint] restore error:', e); }
-}
-
-// Helper: persist state saat background
-function persistHiddenState(){
-  try {
-    ls.set('db_setoran', JSON.stringify(dataSetoran));
-    ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
-    ls.set('db_master_siswa', JSON.stringify(masterSiswa));
-    ls.set('db_points', JSON.stringify(userPoints));
-    ls.set('db_streaks', JSON.stringify(userStreaks));
-    ls.set(LS_HIDDEN_AT, String(Date.now())); // simpan kapan masuk background — PERSISTENT
-    ls.set(LS_LAST_SYNC, String(_lastSyncAt)); // simpan last sync time — PERSISTENT
-    console.log('[visibility] persisted checkpoint:', { hiddenAt: Date.now(), lastSync: _lastSyncAt });
-  } catch(e) { console.warn('[visibility] save error:', e); }
-}
-
-// Helper: calculate bg duration, fallback ke localStorage jika in-memory state hilang
-function calculateBackgroundDuration(){
-  if(_hiddenAt) return Date.now() - _hiddenAt;
-  
-  // Fallback: cek localStorage jika device crash/force-kill
-  try {
-    const savedHidden = ls.get(LS_HIDDEN_AT);
-    if(savedHidden){
-      const bgDur = Date.now() - parseInt(savedHidden, 10);
-      console.log('[checkpoint] fallback mode — recovered bg duration from checkpoint:', bgDur, 'ms');
-      ls.delete(LS_HIDDEN_AT); // hapus checkpoint, sudah terpakai
-      return bgDur;
-    }
-  } catch(e) { console.warn('[checkpoint] fallback error:', e); }
-  
-  return Infinity; // jika tidak ada data, assume lama (force re-sync)
-}
+const _MIN_BG_MS = 30_000; // min waktu background (30 detik) sebelum re-fetch
 
 document.addEventListener('visibilitychange', () => {
   if(!currentUser || !currentSchoolId) return; // jangan jalan jika belum login/sekolah
-  
   if(document.visibilityState === 'hidden'){
-    // ── TUTUP / BACKGROUND: simpan to localStorage dengan CHECKPOINT ──
+    // ── TUTUP / BACKGROUND: simpan ke localStorage ──
     _hiddenAt = Date.now();
-    persistHiddenState();
-    console.log('[visibility] app hidden, checkpoint saved at', _hiddenAt);
+    try {
+      ls.set('db_setoran', JSON.stringify(dataSetoran));
+      ls.set('db_absensi_harian', JSON.stringify(dataAbsensi));
+      ls.set('db_master_siswa', JSON.stringify(masterSiswa));
+      ls.set('db_points', JSON.stringify(userPoints));
+      ls.set('db_streaks', JSON.stringify(userStreaks));
+      ls.set('_lastSyncAt', String(_lastSyncAt));
+    } catch(e) { console.warn('[visibility] save error:', e); }
 
   } else if(document.visibilityState === 'visible'){
     // ── BUKA / KEMBALI KE FOREGROUND: re-fetch jika sudah lama di background ──
-    const bgDuration = calculateBackgroundDuration();
-    _hiddenAt = null; // reset memory state
-    
-    console.log('[visibility] app visible, bg duration:', bgDuration, 'ms, threshold:', _MIN_BG_MS);
+    const bgDuration = _hiddenAt ? Date.now() - _hiddenAt : Infinity;
+    _hiddenAt = null;
 
     if(bgDuration >= _MIN_BG_MS){
-      // Sudah ≥10 detik di background → ambil data terbaru dari Firestore
+      // Sudah ≥30 detik di background → ambil data terbaru dari Firestore
       if(typeof fetchAllData === 'function' && currentSchoolId){
-        console.log('[visibility] triggering fetchAllData due to background (>= '+_MIN_BG_MS+'ms)');
-        showSyncing(); // tampilkan sync indicator
-        fetchAllData()
-          .then(() => {
-            _lastSyncAt = Date.now();
-            ls.set(LS_LAST_SYNC, String(_lastSyncAt));
-            showSyncDone();
-            console.log('[visibility] fetchAllData success at', _lastSyncAt);
-          })
-          .catch(e => {
-            console.warn('[visibility] fetchAllData error:', e);
-            showToast('⚠️ Gagal menyinkron data setelah kembali aktif', 'warning');
-          });
+        fetchAllData().then(() => {
+          _lastSyncAt = Date.now();
+          ls.set('_lastSyncAt', String(_lastSyncAt));
+        }).catch(e => console.warn('[visibility] fetchAllData error:', e));
       }
-    } else {
-      console.log('[visibility] bg duration < '+_MIN_BG_MS+'ms threshold, skipping re-fetch');
     }
+    // Jika < 30 detik (misal switch tab sebentar), tidak perlu fetch ulang
   }
 });
-
-// ─── Tambahan: pageshow listener untuk handle browser back/restore ───
-window.addEventListener('pageshow', (e) => {
-  if(!currentUser || !currentSchoolId) return;
-  if(e.persisted){
-    console.log('[pageshow] page restored from bfcache, triggering sync');
-    showSyncing();
-    fetchAllData()
-      .then(() => {
-        _lastSyncAt = Date.now();
-        ls.set(LS_LAST_SYNC, String(_lastSyncAt));
-        showSyncDone();
-        console.log('[pageshow] sync success');
-      })
-      .catch(e => {
-        console.warn('[pageshow] sync error:', e);
-      });
-  }
-}, false);
 
 // ─── Sync indicator ────────────────────────────────────────────
 let syncTimer = null;
@@ -6584,6 +6448,7 @@ function buildSuratDropdown() {
   } else {
     sel.selectedIndex = sorted.length > 0 ? 1 : 0;
   }
+  syncCsdTrigger('surat');
   renderAyatList();
 }
 // GANTI fungsi renderAyatList() dengan yang ini
@@ -6750,6 +6615,7 @@ function showSiswaHafalanHistory(nama){
       const suratSel = document.getElementById('surat');
       if (suratSel && terakhir.surat) {
         suratSel.value = terakhir.surat;
+        syncCsdTrigger('surat');
       }
 
       // Set ayat mulai & sampai dari rentang terakhir
@@ -8502,8 +8368,6 @@ function renderAyatGrid(){
 function simpanSetoran(){
   const nama = document.getElementById('namaSiswa').value;
   if(!nama){ showToast('Pilih Nama Siswa!','warning'); return; }
-  const suratVal = document.getElementById('surat').value;
-  if(!suratVal){ showToast('Pilih Surat terlebih dahulu!','warning'); return; }
   const ayatSalah = [...document.querySelectorAll('.ai.salah')].map(x => x.textContent);
   const tambahan = document.getElementById('tambahan').value;
   const catSalah = [...document.querySelectorAll('.cat-salah:checked')].map(x => x.value);
@@ -9791,9 +9655,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Called by Firebase auth after successful login
 document.addEventListener('firebase-ready', function() {
-  // Restore sync checkpoint dari localStorage sebelum semua operasi lain
-  restoreSyncCheckpoint();
-  
   // fetchAllData sudah render semua UI utama.
   // Di sini hanya init pelengkap yang tidak ada di fetchAllData.
   if(typeof XLSX === 'undefined'){
@@ -10590,41 +10451,6 @@ function openCsdSiswa(targetId) {
   openCsd(targetId, '👤 Pilih Siswa');
 }
 
-// Fungsi baru untuk popup grid
-function openCsdGrid(targetId, title) {
-  _csdTargetId = targetId;
-  const titleEl = document.getElementById('csdTitle');
-  if(titleEl) titleEl.textContent = title || 'Pilih';
-  const sel = document.getElementById(targetId);
-  _csdItems = [];
-  for (const child of sel.children) {
-    if (child.tagName === 'OPTGROUP') {
-      for (const opt of child.children) {
-        _csdItems.push({ value: opt.value, label: opt.text, group: child.label });
-      }
-    } else {
-      _csdItems.push({ value: child.value, label: child.text, group: null });
-    }
-  }
-  const searchInput = document.getElementById('csdSearchInput');
-  if (searchInput) searchInput.value = '';
-  renderCsdItemsGrid();
-  const overlay = document.getElementById('csdOverlay');
-  const sheet   = overlay.querySelector('.csd-sheet');
-  const trigger = document.getElementById(targetId + 'Trigger');
-  if (sheet) sheet.style.visibility = 'hidden';
-  overlay.classList.add('show');
-  requestAnimationFrame(() => {
-    if (sheet && trigger) _positionCsdSheet(sheet, trigger);
-    if (sheet) sheet.style.visibility = '';
-  });
-}
-
-// Grid version untuk siswa
-function openCsdGridSiswa(targetId, title) {
-  openCsdGrid(targetId, title);
-}
-
 // Sync label trigger setelah select diupdate secara programatik
 function syncCsdTrigger(selectId) {
   const sel = document.getElementById(selectId);
@@ -10645,8 +10471,6 @@ function syncCsdTrigger(selectId) {
 }
 
 function closeCsdSiswa() {
-  const body = document.getElementById('csdBody');
-  if (body) body.classList.remove('grid-mode');
   document.getElementById('csdOverlay').classList.remove('show');
   _csdTargetId = null;
 }
@@ -10655,14 +10479,7 @@ function closeCsdSiswaOutside(e) {
   if (e.target === document.getElementById('csdOverlay')) closeCsdSiswa();
 }
 
-function filterCsdItems() { 
-  const body = document.getElementById('csdBody');
-  if (body && body.classList.contains('grid-mode')) {
-    renderCsdItemsGrid();
-  } else {
-    renderCsdItems();
-  }
-}
+function filterCsdItems() { renderCsdItems(); }
 
 function renderCsdItems() {
   const currentVal = _csdTargetId ? document.getElementById(_csdTargetId).value : '';
@@ -10752,71 +10569,6 @@ function renderCsdItems() {
   }
 
   // Scroll to selected item
-  requestAnimationFrame(() => {
-    const sel = body.querySelector('.csd-row.selected');
-    if (sel) sel.scrollIntoView({ block: 'nearest' });
-  });
-}
-
-function renderCsdItemsGrid() {
-  const currentVal = _csdTargetId ? document.getElementById(_csdTargetId).value : '';
-  const body = document.getElementById('csdBody');
-  const q = (document.getElementById('csdSearchInput')?.value || '').trim().toLowerCase();
-
-  const specialItems = _csdItems.filter(it => !it.value || it.value === 'SEMUA' || it.value === '');
-  const regularItems = _csdItems.filter(it => it.value && it.value !== 'SEMUA' && it.value !== '');
-
-  const filtered = q
-    ? regularItems.filter(it => it.label.toLowerCase().includes(q) || (it.group||'').toLowerCase().includes(q))
-    : regularItems;
-
-  // Aktifkan grid mode pada body
-  body.classList.add('grid-mode');
-  body.innerHTML = '';
-
-  if (!filtered.length && !specialItems.length) {
-    body.innerHTML = '<div class="csd-empty" style="grid-column:1/-1;">Tidak ada pilihan</div>';
-    return;
-  }
-
-  const CHECK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7l233.4-233.3c12.5-12.5 32.8-12.5 45.3 0z"/></svg>';
-
-  // Render special items (tidak dalam grid, di atas)
-  specialItems.forEach(it => {
-    const isSel = it.value === currentVal || (!currentVal && it.value === 'SEMUA');
-    const cleanLabel = it.label.replace(/^[—-]\s*|\s*[—-]$/g,'').trim() || it.label;
-    const row = document.createElement('div');
-    row.className = 'csd-row special' + (isSel ? ' selected' : '');
-    row.innerHTML = `
-      <div class="csd-row-name">👥 ${cleanLabel}</div>
-      ${isSel ? `<div class="csd-row-check">${CHECK_SVG}</div>` : ''}`;
-    row.style.gridColumn = '1 / -1';
-    row.addEventListener('click', () => selectCsdItem(it.value, it.label));
-    body.appendChild(row);
-  });
-
-  if (q && !filtered.length) {
-    const empty = document.createElement('div');
-    empty.className = 'csd-empty';
-    empty.style.gridColumn = '1 / -1';
-    empty.textContent = `Tidak ditemukan "${q}"`;
-    body.appendChild(empty);
-    return;
-  }
-
-  // Render items dalam grid (tanpa group labels, langsung grid)
-  filtered.forEach((it) => {
-    const isSel = it.value === currentVal;
-    const cleanLabel = it.label.replace(/^\d+\.\s*/, '');
-    const row = document.createElement('div');
-    row.className = 'csd-row' + (isSel ? ' selected' : '');
-    row.innerHTML = `
-      <span class="csd-row-name">${cleanLabel}</span>
-      ${isSel ? `<div class="csd-row-check">${CHECK_SVG}</div>` : ''}`;
-    row.addEventListener('click', () => selectCsdItem(it.value, it.label));
-    body.appendChild(row);
-  });
-
   requestAnimationFrame(() => {
     const sel = body.querySelector('.csd-row.selected');
     if (sel) sel.scrollIntoView({ block: 'nearest' });
