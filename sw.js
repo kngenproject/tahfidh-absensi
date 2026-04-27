@@ -69,7 +69,10 @@ self.addEventListener('fetch', evt => {
       caches.match(evt.request).then(cached => {
         if (cached) return cached;
         return fetch(evt.request).then(res => {
-          if (res.ok) caches.open(CACHE).then(c => c.put(evt.request, res.clone()));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(evt.request, copy));
+          }
           return res;
         }).catch(() => new Response('Offline', { status: 503 }));
       })
@@ -78,7 +81,10 @@ self.addEventListener('fetch', evt => {
     // Network-first: try fresh, fall back to cache
     evt.respondWith(
       fetch(evt.request).then(res => {
-        if (res.ok) caches.open(CACHE).then(c => c.put(evt.request, res.clone()));
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(evt.request, copy));
+        }
         return res;
       }).catch(() =>
         caches.match(evt.request).then(c => c || new Response('Offline', { status: 503 }))
