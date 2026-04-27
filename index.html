@@ -4290,15 +4290,13 @@ const ls = {
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-// Enable offline persistence (Firestore v10+ recommended API)
-try {
-  fbDb.settings({
-    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
-    cache: { kind: 'persistentMultipleTab' }
-  });
-} catch(e) {
-  // settings() must be called before any Firestore usage; ignore if already set
-}
+// Enable offline persistence (compat SDK — multi-tab IndexedDB)
+// Note: enableMultiTabIndexedDbPersistence deprecation warning is a known
+// Firebase compat/10.7.1 cosmetic issue; behaviour is correct and unchanged.
+fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
+  if (err.code === 'failed-precondition') console.warn('[FB] Persistence: multiple tabs open');
+  else if (err.code === 'unimplemented') console.warn('[FB] Persistence: browser not supported');
+});
 
 // Global user state
 let currentUser      = null;
@@ -4628,8 +4626,10 @@ async function fetchAllData(){
     const snapPoints = await schoolCol('points').get(FROM_SERVER);
     userPoints = {}; userStreaks = {};
     snapPoints.docs.forEach(d => {
-      userPoints[d.id] = d.data().total || 0;
-      userStreaks[d.id] = d.data().streak || 0;
+      // Key di userPoints/userStreaks selalu nama siswa (untuk kompatibilitas lookup)
+      const namaSiswa = d.data().nama || d.id;
+      userPoints[namaSiswa] = d.data().total || 0;
+      userStreaks[namaSiswa] = d.data().streak || 0;
     });
 
   } catch(e){
@@ -4643,8 +4643,9 @@ async function fetchAllData(){
       dataSetoran = _sortSetoran(snapSetoran.docs.map(d => ({ fbId: d.id, ...d.data() })));
       const snapPoints = await schoolCol('points').get({ source: 'cache' });
       snapPoints.docs.forEach(d => {
-        userPoints[d.id] = d.data().total || 0;
-        userStreaks[d.id] = d.data().streak || 0;
+        const namaSiswa = d.data().nama || d.id;
+        userPoints[namaSiswa] = d.data().total || 0;
+        userStreaks[namaSiswa] = d.data().streak || 0;
       });
       // Load absensi hari ini dari cache per-tanggal (support offline multi-hari)
       const _todayCacheKey = _localDateKey();
@@ -5564,18 +5565,15 @@ let userStreaks = {};
 let lastActive = new Date().toDateString();
 let _tambahanPerSiswa = {};
 
-function checkDailyStreak(){
-  const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  
-  if(lastActive !== today && lastActive !== yesterday){
-    Object.keys(userStreaks).forEach(user=>{ userStreaks[user] = 0; });
-    ls.set('db_streaks', JSON.stringify(userStreaks));
-    showToast('Streak terputus! Ayo mulai lagi!','warning');
-  }
+// Key unik untuk doc points — gabungkan kelas+nama agar siswa bernama sama di kelas berbeda tidak tumpang tindih
+function _pointsKey(nama) {
+  const siswa = masterSiswa.find(s => s.nama === nama);
+  const kelas = (siswa?.kelas || '').trim();
+  return kelas ? `${kelas}__${nama}` : nama;
 }
 
-checkDailyStreak();
+// checkDailyStreak: tidak dipakai lagi — streak dihitung per-siswa
+// via recalcStreak(nama) yang membaca histori setoran aktual (YYYY-MM-DD).
 
 /* ==============================
    DATA SURAT LENGKAP (30 JUZ / 114 SURAT)
@@ -7757,18 +7755,28 @@ function simpanSetoran(){
   // Optimistic local update
   dataSetoran.unshift(rec);
   ls.set('db_setoran', JSON.stringify(dataSetoran));
-  // Update points locally — Tasmi' > Muroja'ah > Setoran biasa
+
+  // ── Hitung tier multiplier — sinkron dengan getSiswaTahfidhInfo ──
+  // Jika surat yang baru diinput ada di luar Juz 30, status otomatis Tasmi'
+  const suratObj = ALL_SURAT.find(x => x.nm === rec.surat);
+  const isLuarJuz30 = suratObj && suratObj.juz !== 30;
+  const effectiveTier = isLuarJuz30 ? "Tasmi'" : (tambahan || '');
+  const _tierMult = effectiveTier === "Tasmi'" ? 2.0 : effectiveTier === "Muroja'ah" ? 1.5 : 1.0;
   if(!userPoints[nama]) userPoints[nama] = 0;
-  const _tierMult = tambahan === "Tasmi'" ? 2.0 : tambahan === "Muroja'ah" ? 1.5 : 1.0;
-  userPoints[nama] += Math.round((rec.stat === 'L' ? 10 : 5) * _tierMult);
-  const today = new Date().toDateString();
-  if(lastActive !== today){
-    if(!userStreaks[nama]) userStreaks[nama] = 0;
-    userStreaks[nama]++;
-    lastActive = today;
-    ls.set('db_last_active', lastActive);
-  }
+  const _poinDitambah = Math.round((rec.stat === 'L' ? 10 : 5) * _tierMult);
+  userPoints[nama] += _poinDitambah;
+  // Simpan poin yang ditambahkan di record agar bisa dikurangi saat dihapus
+  rec._poin = _poinDitambah;
+  dataSetoran[0]._poin = _poinDitambah;
+  ls.set('db_setoran', JSON.stringify(dataSetoran));
+
+  // ── Streak per-siswa (bukan global lastActive) ──
+  // recalcStreak membaca histori aktual — tidak perlu increment manual
+  recalcStreak(nama);
+  ls.set('db_streaks', JSON.stringify(userStreaks));
+
   // Write to Firestore
+  const today = _localDateKey();
   const fbRec = { ...rec };
   delete fbRec.id; // use Firestore auto-id
   fbRec.inputAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -7780,7 +7788,8 @@ function simpanSetoran(){
       ls.set('db_setoran', JSON.stringify(dataSetoran));
     }
     // Update points in Firestore
-    return schoolCol('points').doc(nama).set({
+    return schoolCol('points').doc(_pointsKey(nama)).set({
+      nama,
       total: userPoints[nama],
       streak: userStreaks[nama] || 0,
       lastActive: today
@@ -7791,8 +7800,6 @@ function simpanSetoran(){
     _tambahanPerSiswa[nama] = tambahan;
     ls.set('_tambahanPerSiswa', JSON.stringify(_tambahanPerSiswa));
   }
-  // Hitung ulang streak dari data aktual
-  recalcStreak(nama);
   checkAchievements(nama);
   renderTblSetoran();
   resetForm();
@@ -8195,9 +8202,32 @@ function _showUndoToast(msg, onConfirm, duration=6000){
 
 function _commitDelSetoran(){
   if(!_undoDelPending) return;
-  const { fbIds, isDataAwal } = _undoDelPending;
+  const { records, fbIds, isDataAwal } = _undoDelPending;
   _undoDelPending = null;
   if(!fbIds.length) return;
+
+  // ── Kurangi poin untuk semua record yang dihapus ──
+  const affectedNames = new Set(records.map(r => r.nama).filter(Boolean));
+  records.forEach(r => {
+    if(!r.nama) return;
+    const poin = r._poin || 0;
+    if(poin && userPoints[r.nama]) {
+      userPoints[r.nama] = Math.max(0, userPoints[r.nama] - poin);
+    }
+  });
+  ls.set('db_points', JSON.stringify(userPoints));
+  // Recalc streak untuk siswa yang terdampak
+  affectedNames.forEach(n => recalcStreak(n));
+  ls.set('db_streaks', JSON.stringify(userStreaks));
+  // Sync ke Firestore
+  affectedNames.forEach(n => {
+    schoolCol('points').doc(_pointsKey(n)).set({
+      nama: n,
+      total: userPoints[n] || 0,
+      streak: userStreaks[n] || 0
+    }, { merge: true }).catch(err => console.warn('[FB] updatePointsAfterDel:', err));
+  });
+
   if(isDataAwal){
     (async()=>{
       const chunks = [];
@@ -9622,7 +9652,8 @@ async function simpanPencapaianAwal(){
       });
       await batch.commit();
     }
-    await schoolCol('points').doc(nama).set({
+    await schoolCol('points').doc(_pointsKey(nama)).set({
+      nama,
       total: userPoints[nama], streak: userStreaks[nama]||0
     }, { merge: true });
   })().catch(err => console.warn('[FB] simpanPencapaianAwal:', err));
