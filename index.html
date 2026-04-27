@@ -4290,11 +4290,15 @@ const ls = {
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-// Enable offline persistence
-fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
-  if(err.code === 'failed-precondition') console.warn('[FB] Multiple tabs open');
-  else if(err.code === 'unimplemented') console.warn('[FB] Browser tidak support persistence');
-});
+// Enable offline persistence (Firestore v10+ recommended API)
+try {
+  fbDb.settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+    cache: { kind: 'persistentMultipleTab' }
+  });
+} catch(e) {
+  // settings() must be called before any Firestore usage; ignore if already set
+}
 
 // Global user state
 let currentUser      = null;
