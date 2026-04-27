@@ -86,7 +86,8 @@ self.addEventListener('fetch', evt => {
           caches.open(CACHE).then(c => c.put(evt.request, copy));
         }
         return res;
-      }).catch(() =>
+      }, () =>
+        // fetch itself failed (offline) — serve from cache
         caches.match(evt.request).then(c => c || new Response('Offline', { status: 503 }))
       )
     );
